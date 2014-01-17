@@ -1,0 +1,15 @@
+{
+    "name": "amapUtils",
+    "comName":"AmapUtils",
+    "version": "1.0",
+    "desc": "",
+    "tag":"地图",
+    "githubName":"tinymoo",
+    "author": {
+        "name": "AmapUtils",
+        "email": "muyun.my@taobao.com",
+        "page": ""
+    },
+    "type": "kissy-gallery",
+    "type-url": "http://gallery.kissyui.com/guide"
+}
