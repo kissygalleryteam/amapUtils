@@ -1,4 +1,4 @@
-KISSY.add(function (S, Node, Base) {
+KISSY.add(function (S, Node, Base, Loader) {
 		/**
 		 * 支持的插件名
 		 * @type {Array.<string>}
@@ -24,6 +24,10 @@ KISSY.add(function (S, Node, Base) {
 			} else {
 				this.set('config', S.mix(this.get('config'), config, true, undefined, true));
 			}
+
+			this.set('loader', new Loader({
+				key: this.get('config').key
+			}));
 
 			// 事件监听
 			this.on('afterCoordinateChange', function (ev) {
@@ -52,7 +56,7 @@ KISSY.add(function (S, Node, Base) {
 
 		}
 
-		S.extend(Map, Base, {
+		S.extend(MapWrapper, Base, {
 				/**
 				 * 渲染地图
 				 * @param {Object} centerData 中心点数据
@@ -304,6 +308,9 @@ KISSY.add(function (S, Node, Base) {
 						validator: function (value) {
 							return S.isPlainObject(value) && S.isPlainObject(value.map) && S.isPlainObject(value.marker) && S.isPlainObject(value.marker) && S.isPlainObject(value.infoWindow);
 						}
+					},
+					loader: {
+						value: null
 					}
 				},
 				/**
@@ -343,7 +350,8 @@ KISSY.add(function (S, Node, Base) {
 	{
 		requires: [
 			'node',
-			'base'
+			'base',
+			'./loader'
 		]
 	}
 );

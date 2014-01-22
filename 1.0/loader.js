@@ -1,4 +1,4 @@
-KISSY.add(function (S) {
+KISSY.add(function (S, Base) {
 	function Loader (config) {
 		Loader.superclass.constructor.call(this, config);
 
@@ -20,23 +20,27 @@ KISSY.add(function (S) {
 			load: function (onSuccess) {
 				var that = this;
 				var callbackName = 'mapInit_' + S.guid();
+				var AMap = this.get('AMap')
 
 				window[callbackName] = function () {
-					if (!that._isAMapLoaded) {
-						that._isAMapLoaded = true;
+					var AMap = that.get('AMap');
+
+					if (!AMap) {
+						AMap = window.AMap;
+						that.set('AMap', AMap);
 					}
 					if (S.isFunction(onSuccess)) {
-						onSuccess(window.AMap);
+						onSuccess(AMap);
 					}
 				};
 
-				if (!this._isAMapLoaded) {
+				if (!AMap) {
 					S.getScript(S.substitute('http://webapi.amap.com/maps?v=1.2&key={key}&callback={callback}', {
 						key: this.get('config').key,
 						callback: callbackName
 					}));
 				} else {
-					window[callbackName](window.AMap);
+					window[callbackName](AMap);
 				}
 			}
 		},
@@ -54,10 +58,17 @@ KISSY.add(function (S) {
 					validator: function (value) {
 						return S.isPlainObject(value) && S.isString(value.key);
 					}
+				},
+				AMap: {
+					value: null
 				}
 			}
 		}
 	);
 
 	return Loader;
+}, {
+	requires: [
+		'base'
+	]
 });
