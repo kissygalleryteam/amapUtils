@@ -1,0 +1,343 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>AmapUtils的demo</title>
+    <script src="http://g.tbcdn.cn/kissy/k/1.3.0/kissy-min.js" charset="utf-8"></script>
+    <link rel="stylesheet" href="http://g.tbcdn.cn/kissy/k/1.3.0/css/dpl/base-min.css">
+    <style>
+        #map-container {
+            width: 400px;
+            height: 300px;
+        }
+
+        form fieldset {
+            width: 500px;
+        }
+
+        .demo {
+            overflow: hidden;
+        }
+
+        .demo-config,
+        .demo-btns,
+        .demo-result {
+            float: left;
+        }
+
+        input {
+             margin: 0 3px;
+        }
+    </style>
+</head>
+<body>
+<h2>AmapUtils的demo</h2>
+
+<div class="demo" id="demo">
+    <div class="demo-config">
+        <form id="map-form" name="map">
+            <fieldset>
+                <legend>基本</legend>
+                <p><label for="level">缩放级别</label><input name="level" type="number" id="level"/></p>
+
+                <p><label for="center-x">中心坐标值经度</label><input name="center-x" type="number" id="center-x"/></p>
+
+                <p><label for="center-y">中心坐标值纬度</label><input name="center-y" type="number" id="center-y"/></p>
+
+                <p><label for="zooms-1">缩放级别范围</label><input name="zooms-1" type="number" id="zooms-1"
+                                                             value="3"/>-<input name="zooms-2" type="number"
+                                                                                id="zooms-2" value="18"/></p>
+                <!-- 图层 START
+                <p>
+                    <label for="defaultLayer">默认显示的图层</label>
+                    <select name="defaultLayer" id="defaultLayer">
+                        <option value="" selected></option>
+                    </select>
+                </p>
+                图层 END -->
+                <p><label for="resizeEnable"><input type="checkbox" name="resizeEnable" id="resizeEnable" value="1"/>监控地图容器尺寸变化</label>
+                </p>
+
+                <p><label for="dragEnable"><input type="checkbox" name="dragEnable" id="dragEnable" value="1" checked/>地图可通过鼠标拖拽平移</label>
+                </p>
+
+                <p><label for="zoomEnable"><input type="checkbox" name="zoomEnable" id="zoomEnable"
+                                                  value="1" checked/>地图可缩放</label></p>
+
+                <p><label for="keyboardEnable"><input type="checkbox" name="keyboardEnable"
+                                                      id="keyboardEnable" value="1" checked/>地图可通过方向键盘平移浏览</label>
+                </p>
+
+                <p><label for="jogEnable"><input type="checkbox" name="jogEnable" id="jogEnable"
+                                                 value="1" checked/>地图使用缓动效果</label></p>
+
+                <p><label for="continuousZoomEnable"><input type="checkbox"
+                                                            name="continuousZoomEnable"
+                                                            id="continuousZoomEnable" value="1"
+                                                            checked/>地图使用连续缩放效果</label></p>
+
+                <p><label for="doubleClickZoom"><input type="checkbox" name="doubleClickZoom"
+                                                       id="doubleClickZoom" value="1" checked/>地图可通过双击鼠标放大地图</label>
+                </p>
+
+                <p><label for="scrollWheel"><input type="checkbox" name="scrollWheel"
+                                                   id="scrollWheel" value="1" checked/>地图可通过鼠标滚轮缩放浏览</label></p>
+
+                <p><label for="touchZoom"><input type="checkbox" name="touchZoom"
+                                                 id="touchZoom" value="1"/>地图在移动终端上可通过多点触控缩放浏览地图</label></p>
+
+                <p>
+                    <label for="crs">地图显示的参考坐标系</label>
+                    <select name="crs" id="crs">
+                        <option value="">默认</option>
+                        <option value="EPSG3857">EPSG3857</option>
+                        <option value="EPSG3395">EPSG3395</option>
+                        <option value="EPSG4326">EPSG4326</option>
+                    </select>
+                </p>
+                <p><label for="animateEnable"><input type="checkbox" name="animateEnable"
+                                                     id="animateEnable" value="1" checked/>地图平移过程中使用动画</label></p>
+                <button type="reset">重设</button>
+            </fieldset>
+        </form>
+        <form id="toolbar-form" name="toolbar">
+            <fieldset>
+                <legend>ToolBar</legend>
+                <p>
+                    <label for="toolbar-use"><input type="checkbox" name="use"
+                                                    id="toolbar-use" value="1" checked/>启用ToolBar</label>
+
+                </p>
+
+                <p><label for="toolbar-offset-x">相对于地图容器左上角的偏移量x</label><input name="offset-x" type="number"
+                                                                               id="toolbar-offset-x"/></p>
+
+                <p><label for="toolbar-offset-y">相对于地图容器左上角的偏移量y</label><input name="offset-y" type="number"
+                                                                               id="toolbar-offset-y"/></p>
+
+                <p><label for="toolbar-ruler"><input type="checkbox" name="ruler"
+                                                     id="toolbar-ruler" value="1" checked/>标尺键盘可见</label></p>
+
+                <p><label for="toolbar-direction"><input type="checkbox" name="direction"
+                                                         id="toolbar-direction" value="1" checked/>方向键盘可见</label></p>
+
+                <p><label for="toolbar-autoPosition"><input type="checkbox" name="autoPosition"
+                                                            id="toolbar-autoPosition" value="1"/>自动定位</label>
+                </p>
+                <button type="reset">重设</button>
+            </fieldset>
+        </form>
+        <form id="overview-form" name="overview">
+            <fieldset>
+                <legend>OverView</legend>
+                <p>
+                    <label for="overview-use"><input type="checkbox" name="use"
+                                                     id="overview-use" value="1" checked/>启用OverView</label>
+
+                </p>
+
+                <p><label for="overview-is-open"><input type="checkbox" name="isOpen"
+                                                        id="overview-is-open" value="1"/>鹰眼展开</label></p>
+
+                <p><label for="overview-visible"><input type="checkbox" name="visible"
+                                                        id="overview-visible" value="1" checked/>鹰眼显示</label></p>
+                <button type="reset">重设</button>
+
+            </fieldset>
+        </form>
+        <form id="scale-form" name="scale">
+            <fieldset>
+                <legend>Scale</legend>
+                <p>
+                    <label for="scale-use"><input type="checkbox" name="use"
+                                                  id="scale-use" value="1" checked/>启用Scale</label>
+
+                </p>
+                <button type="reset">重设</button>
+            </fieldset>
+        </form>
+        <form id="maptype-form" name="maptype">
+            <fieldset>
+                <legend>MapType</legend>
+                <p>
+                    <label for="maptype-use"><input type="checkbox" name="use"
+                                                    id="maptype-use" value="1" checked/>启用MapType</label>
+
+                </p>
+
+                <p><label for="maptype-defaulttype">初始化默认图层类型</label><input name="defaultType" type="number"
+                                                                            id="maptype-defaulttype" value="0"/></p>
+
+                <p><label for="maptype-showtraffic"><input type="checkbox" name="showTraffic"
+                                                           id="maptype-showtraffic" value="1"/>叠加实时交通图层</label></p>
+
+                <p><label for="maptype-showroad"><input type="checkbox" name="showRoad"
+                                                        id="maptype-showroad" value="1"/>叠加路网图层</label></p>
+                <button type="reset">重设</button>
+
+            </fieldset>
+        </form>
+
+    </div>
+
+    <div class="demo-result">
+        <button type="button" id="generate-btn">生成</button>
+        <div id="map-container"></div>
+    </div>
+</div>
+
+<script>
+    var S = KISSY;
+    if (S.Config.debug) {
+        var srcPath = "../../";
+        S.config({
+            packages: [
+                {
+                    name: "gallery/amapUtils",
+                    path: srcPath,
+                    charset: "utf-8",
+                    ignorePackageNameInUri: true
+                }
+            ]
+        });
+    }
+
+    S.use('node, gallery/amapUtils/1.0/mapWrapper', function (S, Node, MapWrapper) {
+        function getConfig () {
+            return {
+                key: 'b1081aad26845f8c4ed7136809e8e16a',
+                options: getMapConfig(),
+                plugins: [getToolBarConfig(), getOverViewConfig(), getScaleConfig(), getMapTypeConfig()]
+            }
+        }
+
+        function getMapConfig (config) {
+            var formDOMNode = Node.one('#map-form').getDOMNode();
+            var config = {};
+
+            addCommonValueToConfig(config, formDOMNode, [
+                'level',
+                'resizeEnable',
+                'dragEnable',
+                'zoomEnable',
+                'keyboardEnable',
+                'jogEnable',
+                'continuousZoomEnable',
+                'doubleClickZoom',
+                'scrollWheel',
+                'touchZoom',
+                'crs',
+                'animateEnable'
+            ]);
+
+            if (formDOMNode['center-x'].value != '' && formDOMNode['center-y'].value != '') {
+                config.center = [formDOMNode['center-x'].value * 1, formDOMNode['center-y'] * 1];
+            }
+            if (formDOMNode['zooms-1'].value != '' && formDOMNode['zooms-2'].value != '') {
+                config.zooms = [formDOMNode['zooms-1'].value * 1, formDOMNode['zooms-2'].value * 1];
+            }
+
+            return config;
+        }
+
+        function getToolBarConfig (config) {
+            var formDOMNode = document.forms.toolbar;
+            var config = {};
+
+            if (formDOMNode['use'].value == '1') {
+                config.name = 'ToolBar';
+                addCommonValueToConfig(config, formDOMNode, [
+                    'ruler',
+                    'direction',
+                    'autoPosition'
+                ]);
+
+                if (formDOMNode['offset-x'].value != '' && formDOMNode['offset-y'].value != '') {
+                    config.offset = [formDOMNode['offset-x'].value * 1, formDOMNode['offset-y'] * 1];
+                }
+            }
+
+            return config;
+        }
+
+        function getOverViewConfig (config) {
+            var formDOMNode = document.forms.overview;
+            var config = {};
+
+            if (formDOMNode['use'].value == '1') {
+                config.name = 'OverView';
+                addCommonValueToConfig(config, formDOMNode, [
+                    'isOpen',
+                    'visible'
+                ]);
+            }
+
+            return config;
+        }
+
+        function getScaleConfig (config) {
+            var formDOMNode = document.forms.scale;
+            var config = {};
+
+            if (formDOMNode['use'].value == '1') {
+                config.name = 'Scale';
+            }
+
+            return config;
+        }
+
+        function getMapTypeConfig (config) {
+            var formDOMNode = document.forms.maptype;
+            var config = {};
+
+            if (formDOMNode['use'].value == '1') {
+                config.name = 'MapType';
+                addCommonValueToConfig(config, formDOMNode, [
+                    'defaultType',
+                    'showTraffic',
+                    'showRoad'
+                ]);
+            }
+
+            return config;
+        }
+
+        function addCommonValueToConfig (config, formDOMNode, names) {
+            S.each(names, function (name, index) {
+                var inputDOMNode = formDOMNode[name];
+                if (inputDOMNode.value != '') {
+                    if (S.inArray(inputDOMNode.type == 'text', ['text', 'select'])) {
+                        config[name] = inputDOMNode.value;
+                    } else if (inputDOMNode.type == 'number') {
+                        config[name] = inputDOMNode.value * 1;
+                    } else if (inputDOMNode.type == 'checkbox') {
+                        if (inputDOMNode.value == '1' && inputDOMNode.checked) {
+                            config[name] = true;
+                        } else {
+                            config[name] = false;
+
+                        }
+                    }
+                }
+            });
+        }
+
+        var mapWrapper;
+
+        Node.one('#generate-btn').on('click', function (ev) {
+            var config = getConfig();
+
+            if (mapWrapper) {
+                mapWrapper.get('map').destroy();
+            }
+
+            console.dir(config);
+
+            mapWrapper = new MapWrapper('#map-container', config);
+            mapWrapper.render();
+        });
+
+    })
+</script>
+</body>
+</html>
