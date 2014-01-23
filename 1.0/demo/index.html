@@ -118,8 +118,12 @@
                 <p><label for="toolbar-ruler"><input type="checkbox" name="ruler"
                                                      id="toolbar-ruler" value="1" checked/>标尺键盘可见</label></p>
 
+
                 <p><label for="toolbar-direction"><input type="checkbox" name="direction"
                                                          id="toolbar-direction" value="1" checked/>方向键盘可见</label></p>
+
+                <p><label for="toolbar-locate"><input type="checkbox" name="locate"
+                                                      id="toolbar-locate" value="1" checked/>定位按钮可见</label></p>
 
                 <p><label for="toolbar-autoPosition"><input type="checkbox" name="autoPosition"
                                                             id="toolbar-autoPosition" value="1"/>自动定位</label>
@@ -165,8 +169,12 @@
 
                 </p>
 
-                <p><label for="maptype-defaulttype">初始化默认图层类型</label><input name="defaultType" type="number"
-                                                                            id="maptype-defaulttype" value="0"/></p>
+                <p><label for="maptype-defaulttype">初始化默认图层类型</label>
+                    <select name="defaultType" id="maptype-defaulttype">
+                        <option value="0">2D地图</option>
+                        <option value="1">卫星图</option>
+                    </select>
+                </p>
 
                 <p><label for="maptype-showtraffic"><input type="checkbox" name="showTraffic"
                                                            id="maptype-showtraffic" value="1"/>叠加实时交通图层</label></p>
@@ -231,7 +239,10 @@
             ]);
 
             if (formDOMNode['center-x'].value != '' && formDOMNode['center-y'].value != '') {
-                config.center = [formDOMNode['center-x'].value * 1, formDOMNode['center-y'] * 1];
+                config.center = {
+                    lat: formDOMNode['center-y'].value * 1,
+                    lng: formDOMNode['center-x'].value * 1
+                };
             }
             if (formDOMNode['zooms-1'].value != '' && formDOMNode['zooms-2'].value != '') {
                 config.zooms = [formDOMNode['zooms-1'].value * 1, formDOMNode['zooms-2'].value * 1];
@@ -249,6 +260,7 @@
                 addCommonValueToConfig(config, formDOMNode, [
                     'ruler',
                     'direction',
+                    'locate',
                     'autoPosition'
                 ]);
 
@@ -330,8 +342,6 @@
             if (mapWrapper) {
                 mapWrapper.get('map').destroy();
             }
-
-            console.dir(config);
 
             mapWrapper = new MapWrapper('#map-container', config);
             mapWrapper.render();

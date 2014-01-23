@@ -1,3 +1,6 @@
+/**
+ * todo options.defaultLayer ToolBar.locationMarker Overview.tileLayer
+ */
 KISSY.add(function (S, Node, Base, Loader) {
 		/**
 		 * 支持的插件名
@@ -68,26 +71,15 @@ KISSY.add(function (S, Node, Base, Loader) {
 					var that = this;
 					var callbackName = 'mapInit_' + this.get('id');
 
-					window[callbackName] = function () {
+					this.get('loader').load(function () {
 						that._init(centerData);
-					};
-
-					if (!window.AMap) {
-						S.getScript(S.substitute('http://webapi.amap.com/maps?v=1.2&key={key}&callback={callback}', {
-							key: this.get('config').key,
-							callback: callbackName
-						}));
-					} else {
-						window[callbackName]();
-					}
+					});
 				},
 				/**
 				 * 初始化
 				 * @private
 				 * @param {Object} centerData 中心点数据
 				 * @param {string} centerData.address 中心点的地址
-				 * @param {number} centerData.lng 中心点经度
-				 * @param {number} centerData.lat 中心点纬度
 				 */
 				_init: function (centerData) {
 					var that = this;
@@ -106,21 +98,25 @@ KISSY.add(function (S, Node, Base, Loader) {
 					if (options && S.isPlainObject(options.tileLayer)) {
 						options.tileLayer = new AMap.TileLayer(options.tileLayer);
 					}
+					if (console.dir) {
+						console.log('[AMapWrapper]地图配置参数信息↓');
+						console.dir(options);
+					}
 					map = new AMap.Map(that.get('containerNode').getDOMNode(), options);
 					that.set('map', map);
 
 					AMap.event.addListener(map, 'complete', function (ev) {
 
-						if (centerData && S.isNumber(centerData.lng) && S.isNumber(centerData.lat)) {
-							// 使用经纬度初始化地图中心位置
-							map.setCenter(new AMap.LngLat(centerData.lng, centerData.lat));
-							that.fire('map:ready');
-						} else if (centerData && centerData.address) {
+						if (S.isPlainObject(centerData) && S.isString(centerData.address) && centerData.address != '') {
+							S.log('[AMapWrapper]使用地址初始化地图中心位置');
 							// 使用地址初始化地图中心位置
 							that.locateByAddress(centerData.address, function () {
 								that.fire('map:ready');
 							});
-						} else {
+						}
+						/* 效果和toolbar里
+						 else if (!options.center) {
+							S.log('[AMapWrapper]使用ip定位初始化地图中心位置');
 							// ip定位
 							map.plugin(['AMap.CitySearch'], function () {
 								var citySearch = new AMap.CitySearch();
@@ -143,7 +139,7 @@ KISSY.add(function (S, Node, Base, Loader) {
 									value: citySearch
 								});
 							});
-						}
+						}*/
 
 						that.fire('map:load', {
 							eventData: ev
@@ -167,6 +163,11 @@ KISSY.add(function (S, Node, Base, Loader) {
 					var AMap = window.AMap;
 					var pluginNameArr = [];
 
+					if (console.dir) {
+						console.log('[AMapWrapper]插件配置参数信息↓');
+						console.dir(config.plugins);
+					}
+
 					if (S.isArray(config.plugins)) {
 						S.each(config.plugins, function (pluginData, index) {
 							var pluginName;
@@ -185,11 +186,8 @@ KISSY.add(function (S, Node, Base, Loader) {
 						map.plugin(S.map(pluginNameArr, function (pluginName) {
 							return 'AMap.' + pluginName;
 						}), function () {
-							S.each(pluginNameArr, function (pluginName) {
-								var pluginData = config.plugins[pluginName];
-								if (S.isBoolean(pluginData)) {
-									pluginData = {};
-								}
+							S.each(config.plugins, function (pluginData) {
+								var pluginName = pluginData.name;
 								var plugin = new AMap[pluginName](pluginData);
 
 								map.addControl(plugin);
@@ -310,9 +308,7 @@ KISSY.add(function (S, Node, Base, Loader) {
 					 */
 					config: {
 						value: {
-							options: {
-								level: 15
-							},
+							options: {},
 							key: '',
 							plugins: []
 						},
@@ -325,7 +321,7 @@ KISSY.add(function (S, Node, Base, Loader) {
 					}
 				},
 				/**
-				 * 将阿里云地图的经纬度对象转化为经纬度数据对象
+				 * 将地图的经纬度对象转化为经纬度数据对象
 				 * @param {AMap.LngLat} lngLat
 				 * @returns {{lat: number, lng: number}}
 				 */
@@ -336,7 +332,7 @@ KISSY.add(function (S, Node, Base, Loader) {
 					}
 				},
 				/**
-				 * 将经纬度数据对象转化为阿里云地图的经纬度对象
+				 * 将经纬度数据对象转化为地图的经纬度对象
 				 * @param {Object} lngLat
 				 * @param {number} lngLat.lat
 				 * @param {number} lngLat.lng
