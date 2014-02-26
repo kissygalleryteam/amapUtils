@@ -1,0 +1,541 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>高德地图生成器</title>
+    <script src="http://g.tbcdn.cn/kissy/k/1.4.1/seed-min.js" charset="utf-8"></script>
+    <link rel="stylesheet" href="http://g.tbcdn.cn/kissy/k/1.4.1/css/dpl/base-min.css">
+    <link rel="stylesheet" href="http://docs.kissyui.com/1.4/source/raw/demo/overlay/assets/cool.css">
+    <style>
+        input[type=text],
+        input[type=number] {
+            width: 50px;
+            margin-left: 7px;
+        }
+
+        input[type=checkbox] {
+            margin-right: 3px;
+        }
+
+        h1 {
+            margin: 0;
+            padding: 10px;
+            background: white;
+            border-bottom: 1px solid grey;
+            position: relative;
+            font-size: 20px;
+            line-height: 1.5;
+        }
+
+        #title {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+        }
+
+        #console button {
+            font-size: 14px;
+            padding: 0.5em;
+            margin-left: 1em;
+        }
+
+        #console label,
+        #console input {
+            font-size: 14px;
+        }
+
+        #level {
+            width: 30px;
+        }
+
+        #center-lat,
+        #center-lng {
+            width: 100px;
+        }
+
+        #config-form {
+            background: white;
+            padding: 2em;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        #config-form fieldset {
+            margin: 0;
+            padding: 0;
+            border: none;
+        }
+
+        #config-form #config-map {
+            float: left;
+            width: 40%;
+            overflow: scroll;
+        }
+
+        #config-form #config-control {
+            float: right;
+            width: 60%;
+            overflow: scroll;
+        }
+
+        #config-form #config-others {
+            clear: both;
+            width: 100%;
+            text-align: right;
+            border-top: 1px solid grey;
+            padding-top: 0.5em;
+
+        }
+
+        #config-form #config-others button {
+            padding: 0.3em 0.6em;
+        }
+
+        #config-form legend {
+            font-size: 14px;
+            font-weight: bold;
+            border-bottom: 1px solid grey;
+        }
+
+        #config-control .mod {
+            width: 50%;
+            float: left;
+        }
+
+        #config-control .mod-hd {
+            font-size: 12px;
+        }
+
+        #config-control-toolbar .mod-bd,
+        #config-control-maptype .mod-bd {
+            height: 200px;
+        }
+
+        #config-control-overview .mod-bd,
+        #config-control-scale .mod-bd {
+            height: 100px;
+        }
+
+
+
+        #map-container {
+            width: 800px;
+            height: 600px;
+        }
+
+        .map-container-loading {
+            background: url(http://img01.taobaocdn.com/tps/i1/T1cKm3XkRpXXXXXXXX-48-48.gif) center center no-repeat transparent;
+        }
+
+        .ks-overlay {
+            position: absolute;
+            left: -9999px;
+            top: -9999px;
+        }
+
+        .ks-overlay-hidden {
+            visibility: hidden;
+        }
+
+        .ks-overlay-mask-hidden {
+            display: none;
+        }
+
+        .ks-overlay-shown {
+            visibility: visible;
+        }
+
+        .ks-overlay-mask-shown {
+            display: block;
+        }
+
+        .ks-dialog {
+            z-index: 9999;
+        }
+    </style>
+</head>
+<body>
+<h1>
+    <div id="console">
+        <label for="level">当前缩放级别</label><input name="level" type="number" id="level" disabled/>
+        <label for="center-lat">中心纬度</label><input name="center-lat" type="text" id="center-lat"/>
+        <label for="center-lat">中心经度</label><input name="center-lng" type="text" id="center-lng"/>
+        <button id="config-btn" type="button">设置</button>
+        <button id="btn-code" type="button" disabled>生成代码</button>
+    </div>
+    <span id="title">高德地图生成器</span>
+</h1>
+
+
+<div id="map-container" class="map-container-loading"></div>
+<script type="text/template" id="config-tpl">
+    <form id="config-form">
+        <div class="form-content">
+            <fieldset id="config-map">
+                <legend>地图</legend>
+                <p><label for="zooms-1">缩放级别范围</label><input name="zooms-1" type="number" id="zooms-1"
+                                                             value="3" attr-default="3"/>-<input name="zooms-2"
+                                                                                                 type="number"
+                                                                                                 id="zooms-2"
+                                                                                                 value="18"
+                                                                                                 attr-default="18"/>
+                </p>
+                <!-- 图层 START
+                <p>
+                    <label for="defaultLayer">默认显示的图层</label>
+                    <select name="defaultLayer" id="defaultLayer">
+                        <option value="" selected></option>
+                    </select>
+                </p>
+                图层 END -->
+                <p><label for="resizeEnable"><input type="checkbox" name="resizeEnable"
+                                                    id="resizeEnable" value="1" attr-default="3"/>监控地图容器尺寸变化</label>
+                </p>
+
+                <p><label for="dragEnable"><input type="checkbox" name="dragEnable" id="dragEnable"
+                                                  value="1" checked/>地图可通过鼠标拖拽平移</label></p>
+
+                <p><label for="zoomEnable"><input type="checkbox" name="zoomEnable" id="zoomEnable"
+                                                  value="1" checked/>地图可缩放</label></p>
+
+                <p><label for="keyboardEnable"><input type="checkbox" name="keyboardEnable"
+                                                      id="keyboardEnable" value="1" checked/>地图可通过方向键盘平移浏览</label>
+                </p>
+
+                <p><label for="jogEnable"><input type="checkbox" name="jogEnable" id="jogEnable"
+                                                 value="1" checked/>地图使用缓动效果</label></p>
+
+                <p><label for="continuousZoomEnable"><input type="checkbox"
+                                                            name="continuousZoomEnable"
+                                                            id="continuousZoomEnable" value="1"
+                                                            checked/>地图使用连续缩放效果</label></p>
+
+                <p><label for="doubleClickZoom"><input type="checkbox" name="doubleClickZoom"
+                                                       id="doubleClickZoom" value="1" checked/>地图可通过双击鼠标放大地图</label>
+                </p>
+
+                <p><label for="scrollWheel"><input type="checkbox" name="scrollWheel"
+                                                   id="scrollWheel" value="1" checked/>地图可通过鼠标滚轮缩放浏览</label></p>
+
+                <p><label for="touchZoom"><input type="checkbox" name="touchZoom"
+                                                 id="touchZoom" value="1" checked/>地图在移动终端上可通过多点触控缩放浏览地图</label></p>
+
+                <!--<p>
+                    <label for="crs">地图显示的参考坐标系</label>
+                    <select name="crs" id="crs">
+                        <option value=""></option>
+                    </select>
+                </p>-->
+                <p><label for="animateEnable"><input type="checkbox" name="animateEnable"
+                                                     id="animateEnable" value="1" checked/>地图平移过程中使用动画</label></p>
+            </fieldset>
+            <fieldset id="config-control">
+                <legend>控件</legend>
+                <div class="mod" id="config-control-toolbar">
+                    <h2 class="mod-hd"><label for="use-toolbar"><input type="checkbox" name="use-toolbar"
+                                                                       class="use-checkbox" id="use-toolbar" value="1"
+                                                                       checked/>ToolBar</label>
+                    </h2>
+
+                    <div class="mod-bd">
+                        <p><label for="toolbar-offset-x">相对于地图容器左上角的偏移量x</label><input name="toolbar-offset-x"
+                                                                                       type="number"
+                                                                                       id="toolbar-offset-x"/>
+                        </p>
+
+                        <p><label for="toolbar-offset-y">相对于地图容器左上角的偏移量y</label><input name="toolbar-offset-y"
+                                                                                       type="number"
+                                                                                       id="toolbar-offset-y"/></p>
+
+                        <p><label for="ruler"><input type="checkbox" name="toolbar-ruler"
+                                                     id="ruler" value="1" checked/>标尺键盘可见</label></p>
+
+                        <p><label for="direction"><input type="checkbox" name="toolbar-direction"
+                                                         id="direction" value="1" checked/>方向键盘可见</label></p>
+                        <p><label for="toolbar-locate"><input type="checkbox" name="toolbar-locate"
+                                                         id="toolbar-locate" value="1" checked/>定位按钮可见</label></p>
+
+                        <p><label for="autoPosition"><input type="checkbox" name="toolbar-autoPosition"
+                                                            id="autoPosition" value="1"/>自动定位</label></p>
+                    </div>
+
+                </div>
+
+
+                <div class="mod" id="config-control-maptype">
+                    <h2 class="mod-hd"><label for="use-maptype"><input type="checkbox" name="use-maptype"
+                                                                       class="use-checkbox" id="use-maptype" value="1"
+                                                                       checked/>MapType</label>
+                    </h2>
+
+                    <div class="mod-bd">
+                        <p>
+                            <label for="maptype-defaultType">地图显示的参考坐标系</label>
+                            <select name="maptype-defaultType" id="maptype-defaultType">
+                                <option value="0" selected>2D</option>
+                                <option value="1">卫星</option>
+                            </select>
+                        </p>
+                        <p><label for="show-traffic"><input type="checkbox" name="maptype-showTraffic"
+                                                            id="show-traffic" value="1"/>叠加实时交通图层</label></p>
+
+                        <p><label for="show-road"><input type="checkbox" name="maptype-showRoad"
+                                                         id="show-road" value="1"/>叠加路网图层</label></p>
+                    </div>
+                </div>
+
+                <div class="mod" id="config-control-overview">
+                    <h2 class="mod-hd"><label for="use-overview"><input type="checkbox" name="use-overview"
+                                                                        class="use-checkbox" id="use-overview" value="1"
+                                                                        checked/>OverView</label>
+                    </h2>
+
+                    <div class="mod-bd">
+                        <p><label for="overview-isOpen"><input type="checkbox" name="overview-isOpen"
+                                                       id="overview-isOpen" value="1"/>鹰眼是否展开</label></p>
+
+                        <p><label for="overview-visible"><input type="checkbox" name="overview-visible"
+                                                       id="overview-visible" value="1" checked/>鹰眼是否可见</label></p>
+                    </div>
+                </div>
+
+                <div class="mod" id="config-control-scale">
+                    <h2 class="mod-hd"><label for="use-overview"><input type="checkbox" name="use-scale"
+                                                                        class="use-checkbox" id="use-scale" value="1"
+                                                                        checked/>Scale</label></h2>
+
+                    <div class="mod-bd">
+
+                    </div>
+                </div>
+
+            </fieldset>
+            <fieldset id="config-others">
+                <label for="container-width">容器宽度</label><input name="container-width" type="number" id="container-width" value="800"/>
+                <label for="container-height">容器高度</label><input name="container-height" type="number"
+                                                                 id="container-height" value="600"/>
+                <button id="config-update" type="button">更新</button>
+                <button type="reset">重设</button>
+            </fieldset>
+        </div>
+    </form>
+</script>
+<script>
+    var S = KISSY;
+    if (S.Config.debug) {
+        var srcPath = "../../";
+        S.config({
+            packages: [
+                {
+                    name: "gallery/amapUtils",
+                    path: srcPath,
+                    charset: "utf-8",
+                    ignorePackageNameInUri: true
+                }
+            ]
+        });
+    }
+
+    S.use('node, overlay, gallery/amapUtils/1.0/mapWrapper', function (S, Node, Overlay, MapWrapper) {
+        var centerData = {
+            lat: 30.278786,
+            lng: 120.026686,
+            level: 16
+        };
+
+        var configNames = [
+            'zooms-1',
+            'zooms-2',
+            'resizeEnable',
+            'dragEnable',
+            'zoomEnable',
+            'keyboardEnable',
+            'jogEnable',
+            'continuousZoomEnable',
+            'doubleClickZoom',
+            'scrollWheel',
+            'touchZoom',
+            'crs',
+            'animateEnable'
+        ];
+
+        function getConfigValueFromInput (inputDOMNode) {
+            var re;
+
+            if (inputDOMNode.type == 'text' || inputDOMNode.nodeName.toUpperCase() == 'SELECT') {
+                re = inputDOMNode.value;
+            } else if (inputDOMNode.type == 'number') {
+                re = inputDOMNode.value * 1;
+            } else if (inputDOMNode.type == 'checkbox') {
+                if (inputDOMNode.checked) {
+                    re = true;
+                } else {
+                    re = false;
+                }
+            }
+
+            return re;
+        }
+
+        function getConfig () {
+            var formDOMNode = Node.one('#config-form').getDOMNode();
+            var config = {
+                key: 'b1081aad26845f8c4ed7136809e8e16a',
+                map: {},
+                plugins: {}
+            };
+
+            S.each([
+                'resizeEnable',
+                'dragEnable',
+                'zoomEnable',
+                'keyboardEnable',
+                'jogEnable',
+                'continuousZoomEnable',
+                'doubleClickZoom',
+                'scrollWheel',
+                'touchZoom',
+                //'crs',
+                'animateEnable'
+            ], function (name, index) {
+                config.map[name] = getConfigValueFromInput(formDOMNode[name]);
+            });
+
+            config.map['zooms'] = [formDOMNode['zooms-1'].value * 1, formDOMNode['zooms-2'].value * 1];
+
+            if (formDOMNode['use-toolbar'].checked) {
+                config.plugins.ToolBar = {};
+                S.each([
+                    'ruler',
+                    'locate',
+                    'direction',
+                    'autoPosition'
+                ], function (name, index) {
+                    config.plugins.ToolBar[name] = getConfigValueFromInput(formDOMNode['toolbar-' + name]);
+                });
+
+                if (formDOMNode['toolbar-offset-x'].value != '' || formDOMNode['toolbar-offset-y'].value != '') {
+                    config.plugins.ToolBar['offset'] = [formDOMNode['toolbar-offset-x'].value, formDOMNode['toolbar-offset-y'].value];
+                }
+            }
+
+
+            if (formDOMNode['use-maptype'].checked) {
+                config.plugins.MapType = {};
+                S.each([
+                    'defaultType',
+                    'showTraffic',
+                    'showRoad'
+                ], function (name, index) {
+                    config.plugins.MapType[name] = getConfigValueFromInput(formDOMNode['maptype-' + name]);
+                });
+            }
+
+
+            if (formDOMNode['use-overview'].checked) {
+                config.plugins.OverView = {};
+                S.each([
+                    'isOpen',
+                    'visible'
+                ], function (name, index) {
+                    config.plugins.OverView[name] = getConfigValueFromInput(formDOMNode['overview-' + name]);
+                });
+            }
+
+
+            if (formDOMNode['use-scale'].checked) {
+                config.plugins.Scale = true;
+            }
+
+
+
+            console.log('地图配置');
+            console.dir(config);
+
+            return config;
+        }
+
+        /*Node.one('#generate-btn').on('click', function (ev) {
+         if (mapWrapper) {
+         mapWrapper.get('map').destroy();
+         }
+         mapWrapper = new MapWrapper('#map-container', getConfig());
+         mapWrapper.render();
+         });*/
+
+        S.ready(function (S) {
+            var mapWrapper = new MapWrapper('#map-container', {
+                key: "b1081aad26845f8c4ed7136809e8e16a",
+                plugins: {
+                    'ToolBar': true,
+                    'OverView': true,
+                    'Scale': true,
+                    'MapType': true
+                }
+            });
+
+            mapWrapper.on('map:ready', function () {
+                mapWrapper.get('containerNode').removeClass('map-container-loading');
+                Node.one('#level').val(mapWrapper.get('map').getZoom());
+                Node.one('#center-lat').val(mapWrapper.get('map').getCenter().lat);
+                Node.one('#center-lng').val(mapWrapper.get('map').getCenter().lng);
+
+                mapWrapper.get('AMap').event.addListener(mapWrapper.get('map'), 'zoomchange', function (ev) {
+                    Node.one('#level').val(mapWrapper.get('map').getZoom());
+                    Node.one('#center-lat').val(mapWrapper.get('map').getCenter().lat);
+                    Node.one('#center-lng').val(mapWrapper.get('map').getCenter().lng);
+                });
+                mapWrapper.get('AMap').event.addListener(mapWrapper.get('map'), 'moveend', function (ev) {
+                    Node.one('#center-lat').val(mapWrapper.get('map').getCenter().lat);
+                    Node.one('#center-lng').val(mapWrapper.get('map').getCenter().lng);
+                });
+            });
+
+            mapWrapper.render(centerData);
+
+            var configOverlay = new Overlay.Dialog({
+                width: 900,
+                headerContent: '设置',
+                bodyContent: Node.one('#config-tpl').html(),
+                closable: true,
+                align: {
+                    points: ['cc', 'cc']
+                }
+            });
+
+            Node.one('#config-btn').on('click', function (ev) {
+                configOverlay.show();
+
+                if (!configOverlay._isInitialized) {
+                    configOverlay._isInitialized = true;
+
+                    Node.one('#config-update').on('click', function (ev) {
+                        var formDOMNode = Node.one('#config-form').getDOMNode();
+
+                        mapWrapper.get('containerNode')
+                                .width(formDOMNode['container-width'].value * 1)
+                                .height(formDOMNode['container-height'].value * 1)
+                                .addClass('map-container-loading');
+                        mapWrapper.set('config', getConfig());
+                        mapWrapper.render(centerData);
+                        configOverlay.hide();
+                    });
+
+                    Node.all('#config-form .use-checkbox').on('click', function (ev) {
+                        var checked = this.checked;
+                        var modBdNode = Node.one(this).parent('.mod-hd').next('.mod-bd');
+
+                        if (!checked) {
+                            modBdNode.css('visibility', 'hidden');
+                        } else {
+                            modBdNode.css('visibility', 'visible');
+                        }
+                    });
+                }
+            });
+        });
+
+    })
+</script>
+</body>
+</html>

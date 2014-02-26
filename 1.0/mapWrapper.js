@@ -52,6 +52,7 @@ KISSY.add(function (S, Node, Base, Loader) {
 
 			this.on('map:ready', function (ev) {
 				this.set('bounds', this.get('map').getBounds());
+                this.set('AMap', AMap);
 			});
 
 		}
@@ -63,6 +64,7 @@ KISSY.add(function (S, Node, Base, Loader) {
 				 * @param {string} centerData.address 中心点的地址
 				 * @param {number} centerData.lng 中心点经度
 				 * @param {number} centerData.lat 中心点纬度
+				 * @param {number} centerData.level 缩放级别
 				 */
 				render: function (centerData) {
 					var that = this;
@@ -88,16 +90,17 @@ KISSY.add(function (S, Node, Base, Loader) {
 				 * @param {string} centerData.address 中心点的地址
 				 * @param {number} centerData.lng 中心点经度
 				 * @param {number} centerData.lat 中心点纬度
+				 * @param {number} centerData.level 缩放级别
 				 */
 				_init: function (centerData) {
 					var that = this;
 					var map = this.get('map');
 					var config = that.get('config');
-					var options = config.options;
+					var options = config.map;
 					var AMap = window.AMap;
 
 					if (map) {
-						that._clear();
+						that.clear();
 					}
 
 					if (options && S.isPlainObject(options.center) && S.isNumber(options.center.lat) && S.isNumber(options.center.lng)) {
@@ -113,7 +116,11 @@ KISSY.add(function (S, Node, Base, Loader) {
 
 						if (centerData && S.isNumber(centerData.lng) && S.isNumber(centerData.lat)) {
 							// 使用经纬度初始化地图中心位置
-							map.setCenter(new AMap.LngLat(centerData.lng, centerData.lat));
+                            if (S.isNumber(centerData.level)) {
+							    map.setZoomAndCenter(centerData.level, new AMap.LngLat(centerData.lng, centerData.lat));
+                            } else {
+							    map.setCenter(new AMap.LngLat(centerData.lng, centerData.lat));
+                            }
 							that.fire('map:ready');
 						} else if (centerData && centerData.address) {
 							// 使用地址初始化地图中心位置
@@ -163,7 +170,7 @@ KISSY.add(function (S, Node, Base, Loader) {
 				_initPlugin: function () {
 					var that = this;
 					var map = this.get('map');
-					var config = that.get('config');
+					var config = this.get('config');
 					var AMap = window.AMap;
 					var pluginNameArr = [];
 
@@ -178,10 +185,8 @@ KISSY.add(function (S, Node, Base, Loader) {
 							return 'AMap.' + pluginName;
 						}), function () {
 							S.each(pluginNameArr, function (pluginName) {
-								var pluginData = config.plugins[pluginName];
-								if (S.isBoolean(pluginData)) {
-									pluginData = {};
-								}
+                                var pluginData = that._processPluginData(pluginName, config.plugins[pluginName]);
+
 								var plugin = new AMap[pluginName](pluginData);
 
 								map.addControl(plugin);
@@ -195,6 +200,30 @@ KISSY.add(function (S, Node, Base, Loader) {
 						});
 					}
 				},
+                _processPluginData: function (pluginName, pluginData) {
+                    var data;
+                    var AMap = this.get('AMap');
+
+                    if (pluginData === true) {
+                        pluginData = {};
+                    }
+
+                    if (pluginName == 'ToolBar') {
+                        data = S.mix({}, pluginData);
+                        if (S.isArray(data.offset)) {
+                            data.offset = new AMap.Pixel(data.offset[0], data.offset[1]);
+                        }
+                    } else if (pluginName == 'MapType') {
+                        data = S.mix({}, pluginData);
+                        if (S.isArray(data.offset)) {
+                            data.offset = new AMap.Pixel(data.offset[0], data.offset[1]);
+                        }
+                    } else {
+                        data = pluginData;
+                    }
+
+                    return data;
+                },
 				/**
 				 * 根据给定的地址进行定位
 				 * @param {string} address 地址
@@ -259,10 +288,10 @@ KISSY.add(function (S, Node, Base, Loader) {
 				 * 销毁地图
 				 * @private
 				 */
-				_clear: function () {
+				clear: function () {
 					this.get('map').destroy();
 					this.set('map', null);
-					this.get('containerNode').html();
+					this.get('containerNode').html('');
 				},
 				restore: function () {
 					this.get('map').setBounds(this.get('bounds'));
@@ -290,28 +319,28 @@ KISSY.add(function (S, Node, Base, Loader) {
 					/**
 					 * 地图参数
 					 * @type {Object} config
-					 * @type {Object} config.options 地图的配置参数，见[官方文档](http://api.amap.com/javascript/reference/map#MapOption)，其中依赖于AMap数据类型的参数需要传入javascript的数据类型
-					 * @type {Object} config.options.center
-					 * @type {number} config.options.center.lat
-					 * @type {number} config.options.center.lng
-					 * @type {Object} config.options.tileLayer
+					 * @type {Object} config.map 地图的配置参数，见[官方文档](http://api.amap.com/javascript/reference/map#MapOption)，其中依赖于AMap数据类型的参数需要传入javascript的数据类型
+					 * @type {Object} config.map.center
+					 * @type {number} config.map.center.lat
+					 * @type {number} config.map.center.lng
+					 * @type {Object} config.map.tileLayer
 					 * @type {Array.<Object.<string, (boolean|Object)>>} config.plugins
 					 */
 					config: {
 						value: {
-							options: {
+							map: {
 								level: 15
 							},
 							key: '',
 							plugins: {}
-						},
-						validator: function (value) {
-							return S.isPlainObject(value) && S.isPlainObject(value.map) && S.isPlainObject(value.marker) && S.isPlainObject(value.marker) && S.isPlainObject(value.infoWindow);
 						}
 					},
 					loader: {
 						value: null
-					}
+					},
+                    AMap: {
+                        value: null
+                    }
 				},
 				/**
 				 * 将阿里云地图的经纬度对象转化为经纬度数据对象
