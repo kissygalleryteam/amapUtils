@@ -1,4 +1,8 @@
 KISSY.add(function (S, Node, Base, Loader) {
+        'use strict';
+
+        var IS_GEOLOCATION_SUPPORTED = navigator.geolocation;
+
 		/**
 		 * 支持的插件名
 		 * @type {Array.<string>}
@@ -52,7 +56,6 @@ KISSY.add(function (S, Node, Base, Loader) {
 
 			this.on('map:ready', function (ev) {
 				this.set('bounds', this.get('map').getBounds());
-                this.set('AMap', AMap);
 			});
 
 		}
@@ -65,12 +68,16 @@ KISSY.add(function (S, Node, Base, Loader) {
 				 * @param {number} centerData.lng 中心点经度
 				 * @param {number} centerData.lat 中心点纬度
 				 * @param {number} centerData.level 缩放级别
+                 * @param {Object} centerData.geolocation geolocation定位参数
 				 */
 				render: function (centerData) {
 					var that = this;
-					var callbackName = 'mapInit_' + this.get('id');
+					var callbackName = 'mapInit_' + this.get('id') + '_' + S.guid();
 
 					window[callbackName] = function () {
+                        if (!this.get('namespace')) {
+                            this.set('namespace', window.AMap);
+                        }
 						that._init(centerData);
 					};
 
@@ -91,13 +98,14 @@ KISSY.add(function (S, Node, Base, Loader) {
 				 * @param {number} centerData.lng 中心点经度
 				 * @param {number} centerData.lat 中心点纬度
 				 * @param {number} centerData.level 缩放级别
+				 * @param {Object} centerData.geolocation geolocation定位参数
 				 */
 				_init: function (centerData) {
 					var that = this;
 					var map = this.get('map');
 					var config = that.get('config');
 					var options = config.map;
-					var AMap = window.AMap;
+					var AMap = this.get('namespace');
 
 					if (map) {
 						that.clear();
@@ -110,9 +118,10 @@ KISSY.add(function (S, Node, Base, Loader) {
 						options.tileLayer = new AMap.TileLayer(options.tileLayer);
 					}
 					map = new AMap.Map(that.get('containerNode').getDOMNode(), options);
-					that.set('map', map);
 
-					AMap.event.addListener(map, 'complete', function (ev) {
+                    this.set('map', map);
+
+					this.addListener('complete', function (ev) {
 
 						if (centerData && S.isNumber(centerData.lng) && S.isNumber(centerData.lat)) {
 							// 使用经纬度初始化地图中心位置
@@ -127,29 +136,12 @@ KISSY.add(function (S, Node, Base, Loader) {
 							that.locateByAddress(centerData.address, function () {
 								that.fire('map:ready');
 							});
+						} else if (IS_GEOLOCATION_SUPPORTED) {
+                            // 使用HTML Geolocation API定位
+                            that._locateByGeolocation(centerData.geolocation);
 						} else {
 							// ip定位
-							map.plugin(['AMap.CitySearch'], function () {
-								var citySearch = new AMap.CitySearch();
 
-								AMap.event.addListener(citySearch, 'complete', function (citySearchResult) {
-									if (citySearchResult.info != 'NO_DATA') {
-										map.setBounds(citySearchResult.bounds);
-									}
-									that.fire('map:ready')
-								});
-
-								AMap.event.addListener(citySearch, 'error', function (errorStatus) {
-									// todo 错误处理
-									S.error(S.substitute('Map插件CitySearch请求失败：{type},{info}', errorStatus));
-								});
-
-								citySearch.getLocalCity();
-
-								that.addAttr('citySearch', {
-									value: citySearch
-								});
-							});
 						}
 
 						that.fire('map:load', {
@@ -250,6 +242,63 @@ KISSY.add(function (S, Node, Base, Loader) {
 						});
 					}
 				},
+                _locateByGeolocation: function (geolocationConfig) {
+                    var that = this;
+
+                    this.plugin(['AMap.Geolocation'], function () {
+                        geolocationConfig = S.mix(this.get('config').geolocation, centerData.geolocationConfig);
+
+                        var geolocation = new AMap.Geolocation(geolocationConfig);
+
+                        that.addAttr('geolocation', {
+                            value: geolocation
+                        });
+
+                        AMap.event.addListener(geolocation, 'complete', function(result) {
+                            S.log(S.substitute('定位结果：{lng}，{lat}', result.lngLat));
+                            S.log(S.substitute('精度范围：{accuracy}', result));
+                            S.log(S.substitute('{foo}经过坐标纠偏', {
+                                foo: result.isConverted ? '' : '没有'
+                            }));
+                            if (result.isConverted && result.info == 'CONVERT_FAILED') {
+                                S.log('坐标纠偏失败');
+                            }
+                            if (!geolocationConfig.panToLocation) {
+                                that.get('map').getCenter(result.lngLat);
+                            }
+                        });
+
+                        AMap.event.addListener(geolocation, 'error', function (error) {
+                            S.log(S.substitute('定位失败：{info}', error));
+                            that._locateByIP();
+                        });
+
+                        geolocation.getCurrentPosition();
+                    });
+                },
+                _locateByIP: function () {
+                    map.plugin(['AMap.CitySearch'], function () {
+                        var citySearch = new AMap.CitySearch();
+
+                        AMap.event.addListener(citySearch, 'complete', function (citySearchResult) {
+                            if (citySearchResult.info != 'NO_DATA') {
+                                map.setBounds(citySearchResult.bounds);
+                            }
+                            that.fire('map:ready')
+                        });
+
+                        AMap.event.addListener(citySearch, 'error', function (errorStatus) {
+                            // todo 错误处理
+                            S.error(S.substitute('Map插件CitySearch请求失败：{type},{info}', errorStatus));
+                        });
+
+                        citySearch.getLocalCity();
+
+                        that.addAttr('citySearch', {
+                            value: citySearch
+                        });
+                    });
+                },
 				/**
 				 * 将地址转化位坐标
 				 * @param {string} address 地址
@@ -295,11 +344,52 @@ KISSY.add(function (S, Node, Base, Loader) {
 				},
 				restore: function () {
 					this.get('map').setBounds(this.get('bounds'));
-				}
+				},
+                /**
+                 * 为map对象添加事件，实际上就是AMap.event.addListener(mapObj, eventName, eventHandler)
+                 * @param {string} eventName
+                 * @param {Function} eventHandler
+                 */
+                addListener: function (eventName, eventHandler) {
+                    this.get('namespace').event.addListener(this.get('map'), eventName, eventHandler);
+                },
+                /**
+                 * 加载组件
+                 * @param {string | Array.<string>} plugins
+                 * @param {Function} callback
+                 */
+                plugin: function (plugins, callback) {
+                    var AMap = this.get('namespace');
+                    var pluginNameArr = [];
+
+                    if (S.isString(plugins)) {
+                        plugins = [plugins];
+                    }
+                    if (S.isArray(plugins)) {
+                        S.each(plugins, function (pluginName) {
+                            var arr = pluginName.match(/^(.*)\.(.*)$/);
+
+                            if (S.isArray(arr) && arr.length == 3) {
+                                if (!AMap[arr[2]]) {
+                                    pluginNameArr.push(arr[2]);
+                                }
+                            }
+                        });
+                    }
+
+                    this.get('map').plugin(pluginNameArr, callback);
+                }
 			},
 			{
 				ATTRS: /** @lends MapLocator*/{
-					/**
+                    /**
+                     * id
+                     * @type {string}
+                     */
+                    id: {
+                        value: S.guid()
+                    },
+                    /**
 					 * 地图容器
 					 * @type {Node}
 					 */
@@ -324,7 +414,7 @@ KISSY.add(function (S, Node, Base, Loader) {
 					 * @type {number} config.map.center.lat
 					 * @type {number} config.map.center.lng
 					 * @type {Object} config.map.tileLayer
-					 * @type {Array.<Object.<string, (boolean|Object)>>} config.plugins
+					 * @type {Array.<Object.<string, (boolean|Object)>} config.plugins
 					 */
 					config: {
 						value: {
@@ -332,13 +422,19 @@ KISSY.add(function (S, Node, Base, Loader) {
 								level: 15
 							},
 							key: '',
-							plugins: {}
+							plugins: {},
+                            geolocation: {
+                                timeout: 5000,
+                                showButton: false,
+                                showMarker: false,
+                                showCircle: false
+                            }
 						}
 					},
 					loader: {
 						value: null
 					},
-                    AMap: {
+                    namespace: {
                         value: null
                     }
 				},
