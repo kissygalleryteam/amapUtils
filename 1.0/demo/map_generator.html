@@ -161,7 +161,7 @@
         <label for="center-lat">中心纬度</label><input name="center-lat" type="text" id="center-lat"/>
         <label for="center-lat">中心经度</label><input name="center-lng" type="text" id="center-lng"/>
         <button id="config-btn" type="button">设置</button>
-        <button id="btn-code" type="button" disabled>生成代码</button>
+        <button id="generate-btn" type="button">生成代码</button>
     </div>
     <span id="title">高德地图生成器</span>
 </h1>
@@ -174,11 +174,10 @@
             <fieldset id="config-map">
                 <legend>地图</legend>
                 <p><label for="zooms-1">缩放级别范围</label><input name="zooms-1" type="number" id="zooms-1"
-                                                             value="3" attr-default="3"/>-<input name="zooms-2"
+                                                             value="3"/>-<input name="zooms-2"
                                                                                                  type="number"
                                                                                                  id="zooms-2"
-                                                                                                 value="18"
-                                                                                                 attr-default="18"/>
+                                                                                                 value="18"/>
                 </p>
                 <!-- 图层 START
                 <p>
@@ -189,7 +188,7 @@
                 </p>
                 图层 END -->
                 <p><label for="resizeEnable"><input type="checkbox" name="resizeEnable"
-                                                    id="resizeEnable" value="1" attr-default="3"/>监控地图容器尺寸变化</label>
+                                                    id="resizeEnable" value="1"/>监控地图容器尺寸变化</label>
                 </p>
 
                 <p><label for="dragEnable"><input type="checkbox" name="dragEnable" id="dragEnable"
@@ -320,6 +319,45 @@
         </div>
     </form>
 </script>
+<script type="text/template">
+    KISSY.use('gallery/amapUtils/1.0/mapWrapper', function (S, MapWrapper) {
+        var mapWrapper = new MapWrapper('/* map container */', {
+            key: '/* key */',
+            map: {
+                {{#if map.zooms}}zooms: {{map.zooms}},{{/if}}
+                {{#if map.resizeEnable}}resizeEnable: {{map.resizeEnable}},{{/if}}
+                {{#if map.dragEnable}}dragEnable: {{map.dragEnable}},{{/if}}
+                {{#if map.zoomEnable}}zoomEnable: {{map.zoomEnable}},{{/if}}
+                {{#if map.keyboardEnable}}keyboardEnable: {{map.keyboardEnable}},{{/if}}
+                {{#if map.jogEnable}}jogEnable: {{map.jogEnable}},{{/if}}
+                {{#if map.continuousZoomEnable}}continuousZoomEnable: {{map.continuousZoomEnable}},{{/if}}
+                {{#if map.doubleClickZoom}}doubleClickZoom: {{map.doubleClickZoom}},{{/if}}
+                {{#if map.scrollWheel}}scrollWheel: {{map.scrollWheel}},{{/if}}
+                {{#if map.touchZoom}}touchZoom: {{map.touchZoom}},{{/if}}
+                {{#if map.crs}}crs: {{map.crs}},{{/if}}
+                {{#if map.animateEnable}}animateEnable: {{map.animateEnable}},{{/if}}
+            },
+            plugins: {
+                {{#if plugins.ToolBar}}
+                ToolBar: {
+                    {{#if map.animateEnable}}animateEnable: {{map.animateEnable}},{{/if}}
+                }
+                {{/if}}
+            }
+            {{#each data}}
+                this
+            {{/each}}
+        });
+
+        mapWrapper.render(function() {
+            {{#if center.level}}
+                level: {{center.level}},
+                lng: {{center.lng}},
+                lat: {{center.lat}}
+            {{/if}}
+        });
+    });
+</script>
 <script>
     var S = KISSY;
     if (S.Config.debug) {
@@ -358,6 +396,9 @@
             'crs',
             'animateEnable'
         ];
+
+        var defaultConfig = {};
+        var currentConfig = {};
 
         function getConfigValueFromInput (inputDOMNode) {
             var re;
@@ -480,15 +521,19 @@
                 Node.one('#center-lat').val(mapWrapper.get('map').getCenter().lat);
                 Node.one('#center-lng').val(mapWrapper.get('map').getCenter().lng);
 
-                mapWrapper.get('AMap').event.addListener(mapWrapper.get('map'), 'zoomchange', function (ev) {
+                mapWrapper.addListener(mapWrapper.get('map'), 'zoomchange', function (ev) {
                     Node.one('#level').val(mapWrapper.get('map').getZoom());
                     Node.one('#center-lat').val(mapWrapper.get('map').getCenter().lat);
                     Node.one('#center-lng').val(mapWrapper.get('map').getCenter().lng);
                 });
-                mapWrapper.get('AMap').event.addListener(mapWrapper.get('map'), 'moveend', function (ev) {
+                mapWrapper.addListener(mapWrapper.get('map'), 'moveend', function (ev) {
                     Node.one('#center-lat').val(mapWrapper.get('map').getCenter().lat);
                     Node.one('#center-lng').val(mapWrapper.get('map').getCenter().lng);
                 });
+            });
+
+            mapWrapper.on('afterConfigChange', function (ev) {
+                currentConfig = ev.newVal;
             });
 
             mapWrapper.render(centerData);
@@ -503,9 +548,11 @@
                 }
             });
 
-            Node.one('#config-btn').on('click', function (ev) {
-                configOverlay.show();
+            configOverlay.show();
+            configOverlay.hide();
+            defaultConfig = currentConfig = getConfig();
 
+            Node.one('#config-btn').on('click', function (ev) {
                 if (!configOverlay._isInitialized) {
                     configOverlay._isInitialized = true;
 
@@ -533,6 +580,11 @@
                     });
                 }
             });
+
+            Node.one('#generate-btn').on('click', function () {
+
+            });
+
         });
 
     })

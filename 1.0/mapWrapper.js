@@ -71,24 +71,13 @@ KISSY.add(function (S, Node, Base, Loader) {
                  * @param {Object} centerData.geolocation geolocation定位参数
 				 */
 				render: function (centerData) {
-					var that = this;
-					var callbackName = 'mapInit_' + this.get('id') + '_' + S.guid();
+                    var that = this;
+                    var loader = this.get('loader');
 
-					window[callbackName] = function () {
-                        if (!this.get('namespace')) {
-                            this.set('namespace', window.AMap);
-                        }
+                    loader.load(function () {
+                        that.set('namespace', loader.get('namespace'));
 						that._init(centerData);
-					};
-
-					if (!window.AMap) {
-						S.getScript(S.substitute('http://webapi.amap.com/maps?v=1.2&key={key}&callback={callback}', {
-							key: this.get('config').key,
-							callback: callbackName
-						}));
-					} else {
-						window[callbackName]();
-					}
+                    });
 				},
 				/**
 				 * 初始化

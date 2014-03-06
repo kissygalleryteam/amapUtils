@@ -2,35 +2,30 @@ KISSY.add(function (S, Base) {
 	function Loader (config) {
 		Loader.superclass.constructor.call(this, config);
 
-		// 参数
 		if (!S.isPlainObject(config)) {
-			S.error('【Loader】实例化失败（参数错误）');
-		} else {
+			S.error('【Amap.Loader】实例化失败（参数错误）');
+		} else if (!S.isString(config.key) || config.key == '') {
+            S.error('【Amap.Loader】实例化失败（key无效）');
+        } else {
 			this.set('config', S.mix(this.get('config'), config, true, undefined, true));
 		}
-
-		this._isAMapLoaded = !!window.AMap;
 	}
 
 	S.extend(Loader, Base, {
 			/**
-			 * 请求高德地图脚本
+			 * 加载高德地图脚本
 			 * @param {Function} onSuccess 请求成功的回到
 			 */
 			load: function (onSuccess) {
 				var that = this;
-				var callbackName = 'mapInit_' + S.guid();
-				var AMap = this.get('AMap')
+				var callbackName = 'mapInit_' + this.get('id') + '_' + S.guid();
+                var AMap = window.AMap;
 
 				window[callbackName] = function () {
-					var AMap = that.get('AMap');
+					that.set('namespace', window.AMap);
 
-					if (!AMap) {
-						AMap = window.AMap;
-						that.set('AMap', AMap);
-					}
 					if (S.isFunction(onSuccess)) {
-						onSuccess(AMap);
+						onSuccess();
 					}
 				};
 
@@ -49,7 +44,7 @@ KISSY.add(function (S, Base) {
 				/**
 				 * 配置参数
 				 * @type {Object} config
-				 * @type {Object} config.key开发者key
+				 * @type {Object} config.key 开发者key
 				 */
 				config: {
 					value: {
@@ -59,9 +54,15 @@ KISSY.add(function (S, Base) {
 						return S.isPlainObject(value) && S.isString(value.key);
 					}
 				},
-				AMap: {
+				namespace: {
 					value: null
-				}
+				},
+                id: {
+                    value: S.guid(),
+                    validator: function () {
+                        return false;
+                    }
+                }
 			}
 		}
 	);
