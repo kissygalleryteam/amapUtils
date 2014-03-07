@@ -19,7 +19,7 @@ KISSY.add(function (S, Node, Base, Loader) {
 
 			// 参数
 			if (container) {
-				this.set('containerNode', Node.one(container));
+				this.set('container', Node.one(container));
 			} else {
 				S.error('Map实例化失败：缺少容器');
 			}
@@ -106,7 +106,7 @@ KISSY.add(function (S, Node, Base, Loader) {
 					if (options && S.isPlainObject(options.tileLayer)) {
 						options.tileLayer = new AMap.TileLayer(options.tileLayer);
 					}
-					map = new AMap.Map(that.get('containerNode').getDOMNode(), options);
+					map = new AMap.Map(that.get('container').getDOMNode(), options);
 
                     this.set('map', map);
 
@@ -329,7 +329,7 @@ KISSY.add(function (S, Node, Base, Loader) {
 				clear: function () {
 					this.get('map').destroy();
 					this.set('map', null);
-					this.get('containerNode').html('');
+					this.get('container').html('');
 				},
 				restore: function () {
 					this.get('map').setBounds(this.get('bounds'));
@@ -382,7 +382,7 @@ KISSY.add(function (S, Node, Base, Loader) {
 					 * 地图容器
 					 * @type {Node}
 					 */
-					containerNode: {
+					container: {
 						value: null
 					},
 					/**

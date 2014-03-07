@@ -9,13 +9,7 @@
 amapUtils是基于高德地图[JavaScript APIs](http://api.amap.com/javascript/index)二次开发的工具集。包括以下类：
 
 1.AmapUtils.Loader 加载器，用于异步加载核心文件
-2.AmapUtils.MapWrapper 地图封装器，用于初始化地图以及操作地图对象
-
-## API
-
-### AmapUtils.Loader
-
-
+2.AmapUtils.MapWrapper 地图封装器，方便对地图的初始化和地图对象的操作
 
 ## changelog
 

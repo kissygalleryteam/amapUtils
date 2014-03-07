@@ -116,8 +116,6 @@
             height: 100px;
         }
 
-
-
         #map-container {
             width: 800px;
             height: 600px;
@@ -161,7 +159,7 @@
         <label for="center-lat">中心纬度</label><input name="center-lat" type="text" id="center-lat"/>
         <label for="center-lat">中心经度</label><input name="center-lng" type="text" id="center-lng"/>
         <button id="config-btn" type="button">设置</button>
-        <button id="generate-btn" type="button">生成代码</button>
+        <button id="generate-btn" type="button" style="display: none;">生成代码</button>
     </div>
     <span id="title">高德地图生成器</span>
 </h1>
@@ -175,9 +173,9 @@
                 <legend>地图</legend>
                 <p><label for="zooms-1">缩放级别范围</label><input name="zooms-1" type="number" id="zooms-1"
                                                              value="3"/>-<input name="zooms-2"
-                                                                                                 type="number"
-                                                                                                 id="zooms-2"
-                                                                                                 value="18"/>
+                                                                                type="number"
+                                                                                id="zooms-2"
+                                                                                value="18"/>
                 </p>
                 <!-- 图层 START
                 <p>
@@ -251,8 +249,9 @@
 
                         <p><label for="direction"><input type="checkbox" name="toolbar-direction"
                                                          id="direction" value="1" checked/>方向键盘可见</label></p>
+
                         <p><label for="toolbar-locate"><input type="checkbox" name="toolbar-locate"
-                                                         id="toolbar-locate" value="1" checked/>定位按钮可见</label></p>
+                                                              id="toolbar-locate" value="1" checked/>定位按钮可见</label></p>
 
                         <p><label for="autoPosition"><input type="checkbox" name="toolbar-autoPosition"
                                                             id="autoPosition" value="1"/>自动定位</label></p>
@@ -291,10 +290,11 @@
 
                     <div class="mod-bd">
                         <p><label for="overview-isOpen"><input type="checkbox" name="overview-isOpen"
-                                                       id="overview-isOpen" value="1"/>鹰眼是否展开</label></p>
+                                                               id="overview-isOpen" value="1"/>鹰眼是否展开</label></p>
 
                         <p><label for="overview-visible"><input type="checkbox" name="overview-visible"
-                                                       id="overview-visible" value="1" checked/>鹰眼是否可见</label></p>
+                                                                id="overview-visible" value="1" checked/>鹰眼是否可见</label>
+                        </p>
                     </div>
                 </div>
 
@@ -310,7 +310,8 @@
 
             </fieldset>
             <fieldset id="config-others">
-                <label for="container-width">容器宽度</label><input name="container-width" type="number" id="container-width" value="800"/>
+                <label for="container-width">容器宽度</label><input name="container-width" type="number"
+                                                                id="container-width" value="800"/>
                 <label for="container-height">容器高度</label><input name="container-height" type="number"
                                                                  id="container-height" value="600"/>
                 <button id="config-update" type="button">更新</button>
@@ -319,34 +320,28 @@
         </div>
     </form>
 </script>
-<script type="text/template">
+<script type="text/template" id="generate-tpl">
+    <pre>
     KISSY.use('gallery/amapUtils/1.0/mapWrapper', function (S, MapWrapper) {
         var mapWrapper = new MapWrapper('/* map container */', {
             key: '/* key */',
             map: {
-                {{#if map.zooms}}zooms: {{map.zooms}},{{/if}}
-                {{#if map.resizeEnable}}resizeEnable: {{map.resizeEnable}},{{/if}}
-                {{#if map.dragEnable}}dragEnable: {{map.dragEnable}},{{/if}}
-                {{#if map.zoomEnable}}zoomEnable: {{map.zoomEnable}},{{/if}}
-                {{#if map.keyboardEnable}}keyboardEnable: {{map.keyboardEnable}},{{/if}}
-                {{#if map.jogEnable}}jogEnable: {{map.jogEnable}},{{/if}}
-                {{#if map.continuousZoomEnable}}continuousZoomEnable: {{map.continuousZoomEnable}},{{/if}}
-                {{#if map.doubleClickZoom}}doubleClickZoom: {{map.doubleClickZoom}},{{/if}}
-                {{#if map.scrollWheel}}scrollWheel: {{map.scrollWheel}},{{/if}}
-                {{#if map.touchZoom}}touchZoom: {{map.touchZoom}},{{/if}}
-                {{#if map.crs}}crs: {{map.crs}},{{/if}}
-                {{#if map.animateEnable}}animateEnable: {{map.animateEnable}},{{/if}}
+                {{#each map}}{{this}}{{/each}}
             },
             plugins: {
-                {{#if plugins.ToolBar}}
                 ToolBar: {
-                    {{#if map.animateEnable}}animateEnable: {{map.animateEnable}},{{/if}}
+                    {{#each plugins.ToolBar}}{{this}}{{/each}}
+                },
+                OverView: {
+                    {{#each plugins.OverView}}{{this}}{{/each}}
+                },
+                Scale: {
+                    {{#each plugins.Scale}}{{this}}{{/each}}
+                },
+                MapType: {
+                    {{#each plugins.MapType}}{{this}}{{/each}}
                 }
-                {{/if}}
             }
-            {{#each data}}
-                this
-            {{/each}}
         });
 
         mapWrapper.render(function() {
@@ -357,33 +352,176 @@
             {{/if}}
         });
     });
+    </pre>
 </script>
 <script>
-    var S = KISSY;
-    if (S.Config.debug) {
-        var srcPath = "../../";
-        S.config({
-            packages: [
-                {
-                    name: "gallery/amapUtils",
-                    path: srcPath,
-                    charset: "utf-8",
-                    ignorePackageNameInUri: true
-                }
-            ]
+var S = KISSY;
+if (S.Config.debug) {
+    var srcPath = "../../";
+    S.config({
+        packages: [
+            {
+                name: "gallery/amapUtils",
+                path: srcPath,
+                charset: "utf-8",
+                ignorePackageNameInUri: true
+            }
+        ]
+    });
+}
+
+S.use('node, overlay, xtemplate, gallery/amapUtils/1.0/mapWrapper', function (S, Node, Overlay, XTemplate, MapWrapper) {
+    var centerData = {
+        lat: 30.278786,
+        lng: 120.026686,
+        level: 16
+    };
+
+    var configNames = [
+        'zooms-1',
+        'zooms-2',
+        'resizeEnable',
+        'dragEnable',
+        'zoomEnable',
+        'keyboardEnable',
+        'jogEnable',
+        'continuousZoomEnable',
+        'doubleClickZoom',
+        'scrollWheel',
+        'touchZoom',
+        'crs',
+        'animateEnable'
+    ];
+
+    var defaultConfig = {};
+    var currentConfig = {};
+
+    function convertObjToArr (obj) {
+        var arr = [];
+        var len;
+
+        S.each(obj, function (value, key) {
+            arr.push(key + ': ' + value);
         });
+
+        len = arr.length;
+
+        S.each(arr, function (value, index) {
+            if (index < len - 1) {
+                arr[index] = value + ','
+            }
+        });
+
+        return arr;
     }
 
-    S.use('node, overlay, gallery/amapUtils/1.0/mapWrapper', function (S, Node, Overlay, MapWrapper) {
-        var centerData = {
-            lat: 30.278786,
-            lng: 120.026686,
-            level: 16
+    function getGenerateTplData (currentConfig, defaultConfig, mapWrapper) {
+        if (!mapWrapper) {
+            return;
+        }
+
+        var config = {
+            map: {},
+            plugins: {
+                ToolBar: {},
+                Scale: {},
+                OverView: {},
+                MapType: {}
+            },
+            center: {
+                level: mapWrapper.get('map').getZoom(),
+                lat: mapWrapper.get('map').getCenter().lat,
+                lng: mapWrapper.get('map').getCenter().lng
+            }
         };
 
-        var configNames = [
-            'zooms-1',
-            'zooms-2',
+        if (S.isPlainObject(currentConfig.map)) {
+            S.each(currentConfig.map, function (value, key) {
+                if (S.isArray(value) && (value[0] !== defaultConfig.map[key][0] || value[1] !== defaultConfig.map[key][1])) {
+                    config.map[key] = '[' + value[0] + ', ' + value[1] + ']';
+                } else if (S.isBoolean(value) && value !== defaultConfig.map[key]) {
+                    config.map[key] = value ? 'true' : 'false';
+                } else if (S.isString(value) && value !== defaultConfig.map[key]) {
+                    config.map[key] = value;
+                }
+            });
+        }
+
+        if (S.isPlainObject(currentConfig.plugins)) {
+            if (S.isPlainObject(currentConfig.plugins.ToolBar)) {
+                S.each(currentConfig.plugins.ToolBar, function (value, key) {
+                    if (S.isBoolean(value) && value !== defaultConfig.plugins.ToolBar[key]) {
+                        config.plugins.ToolBar[key] = value ? 'true' : 'false';
+                    } else if (S.isString(value) && value !== defaultConfig.plugins.ToolBar[key]) {
+                        config.plugins.ToolBar[key] = value;
+                    }
+                });
+            }
+            if (S.isPlainObject(currentConfig.plugins.Scale)) {
+                S.each(currentConfig.plugins.Scale, function (value, key) {
+                    if (S.isBoolean(value) && value !== defaultConfig.plugins.Scale[key]) {
+                        config.plugins.Scale[key] = value ? 'true' : 'false';
+                    } else if (S.isString(value) && value !== defaultConfig.plugins.Scale[key]) {
+                        config.plugins.Scale[key] = value;
+                    }
+                });
+            }
+            if (S.isPlainObject(currentConfig.plugins.OverView)) {
+                S.each(currentConfig.plugins.OverView, function (value, key) {
+                    if (S.isBoolean(value) && value !== defaultConfig.plugins.OverView[key]) {
+                        config.plugins.OverView[key] = value ? 'true' : 'false';
+                    } else if (S.isString(value) && value !== defaultConfig.plugins.OverView[key]) {
+                        config.plugins.OverView[key] = value;
+                    }
+                });
+            }
+            if (S.isPlainObject(currentConfig.plugins.MapType)) {
+                S.each(currentConfig.plugins.MapType, function (value, key) {
+                    if (S.isBoolean(value) && value !== defaultConfig.plugins.MapType[key]) {
+                        config.plugins.MapType[key] = value ? 'true' : 'false';
+                    } else if (S.isString(value) && value !== defaultConfig.plugins.MapType[key]) {
+                        config.plugins.MapType[key] = value;
+                    }
+                });
+            }
+        }
+
+        config.map = convertObjToArr(config.map);
+        config.plugins.ToolBar = convertObjToArr(config.plugins.ToolBar);
+        config.plugins.Scale = convertObjToArr(config.plugins.Scale);
+        config.plugins.MapType = convertObjToArr(config.plugins.MapType);
+        config.plugins.OverView = convertObjToArr(config.plugins.OverView);
+
+        return config;
+    }
+
+    function getConfigValueFromInput(inputDOMNode) {
+        var re;
+
+        if (inputDOMNode.type == 'text' || inputDOMNode.nodeName.toUpperCase() == 'SELECT') {
+            re = inputDOMNode.value;
+        } else if (inputDOMNode.type == 'number') {
+            re = inputDOMNode.value * 1;
+        } else if (inputDOMNode.type == 'checkbox') {
+            if (inputDOMNode.checked) {
+                re = true;
+            } else {
+                re = false;
+            }
+        }
+
+        return re;
+    }
+
+    function getConfig() {
+        var formDOMNode = Node.one('#config-form').getDOMNode();
+        var config = {
+            key: 'b1081aad26845f8c4ed7136809e8e16a',
+            map: {},
+            plugins: {}
+        };
+
+        S.each([
             'resizeEnable',
             'dragEnable',
             'zoomEnable',
@@ -393,201 +531,172 @@
             'doubleClickZoom',
             'scrollWheel',
             'touchZoom',
-            'crs',
+            //'crs',
             'animateEnable'
-        ];
+        ], function (name, index) {
+            config.map[name] = getConfigValueFromInput(formDOMNode[name]);
+        });
 
-        var defaultConfig = {};
-        var currentConfig = {};
+        config.map['zooms'] = [formDOMNode['zooms-1'].value * 1, formDOMNode['zooms-2'].value * 1];
 
-        function getConfigValueFromInput (inputDOMNode) {
-            var re;
-
-            if (inputDOMNode.type == 'text' || inputDOMNode.nodeName.toUpperCase() == 'SELECT') {
-                re = inputDOMNode.value;
-            } else if (inputDOMNode.type == 'number') {
-                re = inputDOMNode.value * 1;
-            } else if (inputDOMNode.type == 'checkbox') {
-                if (inputDOMNode.checked) {
-                    re = true;
-                } else {
-                    re = false;
-                }
-            }
-
-            return re;
-        }
-
-        function getConfig () {
-            var formDOMNode = Node.one('#config-form').getDOMNode();
-            var config = {
-                key: 'b1081aad26845f8c4ed7136809e8e16a',
-                map: {},
-                plugins: {}
-            };
-
+        if (formDOMNode['use-toolbar'].checked) {
+            config.plugins.ToolBar = {};
             S.each([
-                'resizeEnable',
-                'dragEnable',
-                'zoomEnable',
-                'keyboardEnable',
-                'jogEnable',
-                'continuousZoomEnable',
-                'doubleClickZoom',
-                'scrollWheel',
-                'touchZoom',
-                //'crs',
-                'animateEnable'
+                'ruler',
+                'locate',
+                'direction',
+                'autoPosition'
             ], function (name, index) {
-                config.map[name] = getConfigValueFromInput(formDOMNode[name]);
+                config.plugins.ToolBar[name] = getConfigValueFromInput(formDOMNode['toolbar-' + name]);
             });
 
-            config.map['zooms'] = [formDOMNode['zooms-1'].value * 1, formDOMNode['zooms-2'].value * 1];
-
-            if (formDOMNode['use-toolbar'].checked) {
-                config.plugins.ToolBar = {};
-                S.each([
-                    'ruler',
-                    'locate',
-                    'direction',
-                    'autoPosition'
-                ], function (name, index) {
-                    config.plugins.ToolBar[name] = getConfigValueFromInput(formDOMNode['toolbar-' + name]);
-                });
-
-                if (formDOMNode['toolbar-offset-x'].value != '' || formDOMNode['toolbar-offset-y'].value != '') {
-                    config.plugins.ToolBar['offset'] = [formDOMNode['toolbar-offset-x'].value, formDOMNode['toolbar-offset-y'].value];
-                }
+            if (formDOMNode['toolbar-offset-x'].value != '' || formDOMNode['toolbar-offset-y'].value != '') {
+                config.plugins.ToolBar['offset'] = [formDOMNode['toolbar-offset-x'].value, formDOMNode['toolbar-offset-y'].value];
             }
-
-
-            if (formDOMNode['use-maptype'].checked) {
-                config.plugins.MapType = {};
-                S.each([
-                    'defaultType',
-                    'showTraffic',
-                    'showRoad'
-                ], function (name, index) {
-                    config.plugins.MapType[name] = getConfigValueFromInput(formDOMNode['maptype-' + name]);
-                });
-            }
-
-
-            if (formDOMNode['use-overview'].checked) {
-                config.plugins.OverView = {};
-                S.each([
-                    'isOpen',
-                    'visible'
-                ], function (name, index) {
-                    config.plugins.OverView[name] = getConfigValueFromInput(formDOMNode['overview-' + name]);
-                });
-            }
-
-
-            if (formDOMNode['use-scale'].checked) {
-                config.plugins.Scale = true;
-            }
-
-
-
-            console.log('地图配置');
-            console.dir(config);
-
-            return config;
         }
 
-        /*Node.one('#generate-btn').on('click', function (ev) {
-         if (mapWrapper) {
-         mapWrapper.get('map').destroy();
-         }
-         mapWrapper = new MapWrapper('#map-container', getConfig());
-         mapWrapper.render();
-         });*/
 
-        S.ready(function (S) {
-            var mapWrapper = new MapWrapper('#map-container', {
-                key: "b1081aad26845f8c4ed7136809e8e16a",
-                plugins: {
-                    'ToolBar': true,
-                    'OverView': true,
-                    'Scale': true,
-                    'MapType': true
-                }
+        if (formDOMNode['use-maptype'].checked) {
+            config.plugins.MapType = {};
+            S.each([
+                'defaultType',
+                'showTraffic',
+                'showRoad'
+            ], function (name, index) {
+                config.plugins.MapType[name] = getConfigValueFromInput(formDOMNode['maptype-' + name]);
             });
+        }
 
-            mapWrapper.on('map:ready', function () {
-                mapWrapper.get('containerNode').removeClass('map-container-loading');
+
+        if (formDOMNode['use-overview'].checked) {
+            config.plugins.OverView = {};
+            S.each([
+                'isOpen',
+                'visible'
+            ], function (name, index) {
+                config.plugins.OverView[name] = getConfigValueFromInput(formDOMNode['overview-' + name]);
+            });
+        }
+
+
+        if (formDOMNode['use-scale'].checked) {
+            config.plugins.Scale = true;
+        }
+
+
+        console.log('地图配置');
+        console.dir(config);
+
+        return config;
+    }
+
+    /*Node.one('#generate-btn').on('click', function (ev) {
+     if (mapWrapper) {
+     mapWrapper.get('map').destroy();
+     }
+     mapWrapper = new MapWrapper('#map-container', getConfig());
+     mapWrapper.render();
+     });*/
+
+    S.ready(function (S) {
+        var mapWrapper = new MapWrapper('#map-container', {
+            key: "b1081aad26845f8c4ed7136809e8e16a",
+            plugins: {
+                'ToolBar': true,
+                'OverView': true,
+                'Scale': true,
+                'MapType': true
+            }
+        });
+
+        mapWrapper.on('map:ready', function () {
+            mapWrapper.get('container').removeClass('map-container-loading');
+            Node.one('#level').val(mapWrapper.get('map').getZoom());
+            Node.one('#center-lat').val(mapWrapper.get('map').getCenter().lat);
+            Node.one('#center-lng').val(mapWrapper.get('map').getCenter().lng);
+
+            mapWrapper.addListener(mapWrapper.get('map'), 'zoomchange', function (ev) {
                 Node.one('#level').val(mapWrapper.get('map').getZoom());
                 Node.one('#center-lat').val(mapWrapper.get('map').getCenter().lat);
                 Node.one('#center-lng').val(mapWrapper.get('map').getCenter().lng);
-
-                mapWrapper.addListener(mapWrapper.get('map'), 'zoomchange', function (ev) {
-                    Node.one('#level').val(mapWrapper.get('map').getZoom());
-                    Node.one('#center-lat').val(mapWrapper.get('map').getCenter().lat);
-                    Node.one('#center-lng').val(mapWrapper.get('map').getCenter().lng);
-                });
-                mapWrapper.addListener(mapWrapper.get('map'), 'moveend', function (ev) {
-                    Node.one('#center-lat').val(mapWrapper.get('map').getCenter().lat);
-                    Node.one('#center-lng').val(mapWrapper.get('map').getCenter().lng);
-                });
             });
-
-            mapWrapper.on('afterConfigChange', function (ev) {
-                currentConfig = ev.newVal;
+            mapWrapper.addListener(mapWrapper.get('map'), 'moveend', function (ev) {
+                Node.one('#center-lat').val(mapWrapper.get('map').getCenter().lat);
+                Node.one('#center-lng').val(mapWrapper.get('map').getCenter().lng);
             });
-
-            mapWrapper.render(centerData);
-
-            var configOverlay = new Overlay.Dialog({
-                width: 900,
-                headerContent: '设置',
-                bodyContent: Node.one('#config-tpl').html(),
-                closable: true,
-                align: {
-                    points: ['cc', 'cc']
-                }
-            });
-
-            configOverlay.show();
-            configOverlay.hide();
-            defaultConfig = currentConfig = getConfig();
-
-            Node.one('#config-btn').on('click', function (ev) {
-                if (!configOverlay._isInitialized) {
-                    configOverlay._isInitialized = true;
-
-                    Node.one('#config-update').on('click', function (ev) {
-                        var formDOMNode = Node.one('#config-form').getDOMNode();
-
-                        mapWrapper.get('containerNode')
-                                .width(formDOMNode['container-width'].value * 1)
-                                .height(formDOMNode['container-height'].value * 1)
-                                .addClass('map-container-loading');
-                        mapWrapper.set('config', getConfig());
-                        mapWrapper.render(centerData);
-                        configOverlay.hide();
-                    });
-
-                    Node.all('#config-form .use-checkbox').on('click', function (ev) {
-                        var checked = this.checked;
-                        var modBdNode = Node.one(this).parent('.mod-hd').next('.mod-bd');
-
-                        if (!checked) {
-                            modBdNode.css('visibility', 'hidden');
-                        } else {
-                            modBdNode.css('visibility', 'visible');
-                        }
-                    });
-                }
-            });
-
-            Node.one('#generate-btn').on('click', function () {
-
-            });
-
         });
 
-    })
+        mapWrapper.on('afterConfigChange', function (ev) {
+            currentConfig = ev.newVal;
+        });
+
+        mapWrapper.render(centerData);
+
+        var configOverlay = new Overlay.Dialog({
+            width: 900,
+            headerContent: '设置',
+            bodyContent: Node.one('#config-tpl').html(),
+            closable: true,
+            align: {
+                points: ['cc', 'cc']
+            }
+        });
+
+        configOverlay.show();
+        configOverlay.hide();
+        defaultConfig = currentConfig = getConfig();
+
+        var generateOverlay = new Overlay.Dialog({
+            width: 900,
+            headerContent: '代码',
+            bodyContent: new XTemplate(Node.one('#generate-tpl').html()).render(getGenerateTplData(currentConfig, defaultConfig)),
+            closable: true,
+            align: {
+                points: ['cc', 'cc']
+            }
+        });
+
+
+        Node.one('#config-btn').on('click', function (ev) {
+            if (!configOverlay._isInitialized) {
+                configOverlay._isInitialized = true;
+
+                Node.one('#config-update').on('click', function (ev) {
+                    var formDOMNode = Node.one('#config-form').getDOMNode();
+
+                    mapWrapper.get('container')
+                            .width(formDOMNode['container-width'].value * 1)
+                            .height(formDOMNode['container-height'].value * 1)
+                            .addClass('map-container-loading');
+                    mapWrapper.set('config', getConfig());
+                    mapWrapper.render(centerData);
+                    configOverlay.hide();
+                    Node.one('#generate-btn').show();
+                });
+
+                Node.all('#config-form .use-checkbox').on('click', function (ev) {
+                    var checked = this.checked;
+                    var modBdNode = Node.one(this).parent('.mod-hd').next('.mod-bd');
+
+                    if (!checked) {
+                        modBdNode.css('visibility', 'hidden');
+                    } else {
+                        modBdNode.css('visibility', 'visible');
+                    }
+                });
+            }
+
+            configOverlay.show();
+        });
+
+        Node.one('#generate-btn').on('click', function () {
+            generateOverlay.set('bodyContent', new XTemplate(Node.one('#generate-tpl').html()).render(getGenerateTplData(currentConfig, defaultConfig, mapWrapper)));
+            generateOverlay.show();
+        });
+
+    });
+
+})
 </script>
 </body>
 </html>

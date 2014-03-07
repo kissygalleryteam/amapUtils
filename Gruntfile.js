@@ -32,6 +32,14 @@ module.exports = function(grunt) {
                     {
                         src: "<%= pkg.version %>/index.js",
                         dest: "<%= pkg.version %>/build/index.js"
+                    },
+                    {
+                        src: "<%= pkg.version %>/loader.js",
+                        dest: "<%= pkg.version %>/build/loader.js"
+                    },
+                    {
+                        src: "<%= pkg.version %>/mapWrapper.js",
+                        dest: "<%= pkg.version %>/build/mapWrapper.js"
                     }
                 ]
             }
