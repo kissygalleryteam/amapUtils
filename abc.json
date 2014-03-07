@@ -2,14 +2,16 @@
     "name": "amapUtils",
     "comName":"AmapUtils",
     "version": "1.0",
-    "desc": "基于高德地图JavaScript API的二次开发集合",
-    "tag":"地图,高德地图",
+    "desc": "",
+    "tag":"地图，高德地图",
     "githubName":"tinymoo",
     "author": {
-        "name": "AmapUtils",
+        "name": "牧云",
         "email": "muyun.my@taobao.com",
-        "page": "https://tinymoo.github.com"
+        "page": ""
     },
+	"flexComboPort":"81",
+	"reserveServerPort":"8080",
     "type": "kissy-gallery",
     "type-url": "http://gallery.kissyui.com/guide"
 }
