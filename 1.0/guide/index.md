@@ -101,3 +101,7 @@ AmapUtils是。
 ##### config
 
 @type {Object} 配置参数
+
+#### Events
+
+##### ready
