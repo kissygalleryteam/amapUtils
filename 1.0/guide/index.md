@@ -1,9 +1,8 @@
 ## 综述
 
 AmapUtils是针对基于高德API的二次开发的辅助工具集合：
-
-1. AmapUtils.Loader， 对核心脚本异步加载的封装；
-2. AmapUtils.MapWrapper，简化了地图对象的初始化，选择性的提供地图方法调用的快捷方式。
+  1. AmapUtils.Loader， 对核心脚本异步加载的封装；
+  2. AmapUtils.MapWrapper，简化了地图对象的初始化，选择性的提供地图方法调用的快捷方式。
 
 * 版本：1.0
 * 作者：牧云
@@ -44,6 +43,7 @@ AmapUtils是针对基于高德API的二次开发的辅助工具集合：
 #### Constructor
 
 @param {Object} config
+
 @param {string} config.key 开发者key
 
 #### Methods
@@ -82,9 +82,13 @@ AmapUtils是针对基于高德API的二次开发的辅助工具集合：
 #### Constructor
 
 @param {string | DOMNode | KISSY-Node} mapContainer 地图容器
+
 @param {Object} config 配置
+
 @param {Object} config.key 开发者key
+
 @param {Object} config.map 地图配置
+
 @param {Object} config.plugins 插件配置
 
 #### Methods
@@ -107,6 +111,7 @@ AmapUtils是针对基于高德API的二次开发的辅助工具集合：
 调用插件
 
 @param {string | Array.<string>} plugins 插件名
+
 @param {Function} callback 调用成功后的回调
 
 #### Attributes
