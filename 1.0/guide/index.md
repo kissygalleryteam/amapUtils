@@ -1,9 +1,12 @@
 ## 综述
 
-AmapUtils是。
+AmapUtils是针对基于高德API的二次开发的辅助工具集合：
+
+1. AmapUtils.Loader， 对核心脚本异步加载的封装；
+2. AmapUtils.MapWrapper，简化了地图对象的初始化，选择性的提供地图方法调用的快捷方式。
 
 * 版本：1.0
-* 作者：AmapUtils
+* 作者：牧云
 * demo：[http://gallery.kissyui.com/amapUtils/1.0/demo/index.html](http://gallery.kissyui.com/amapUtils/1.0/demo/index.html)
 
 ## 初始化组件
@@ -11,14 +14,28 @@ AmapUtils是。
 ### Loader
 
     S.use('gallery/amapUtils/1.0/loader', function (S, loader) {
-         var loader = new loader();
+         var loader = new loader({
+            key: ''
+         });
+
+         loader.load(function () {
+            // your code
+         });
     })
 
 ### MapWrapper
 
     S.use('gallery/amapUtils/1.0/mapWrapper', function (S, MapWrapper) {
-             var mapWrapper = new loader();
-        })
+         var mapWrapper = new MapWrapper('#map-container', {
+            key: '',
+            map: {},
+            plugins: {}
+         });
+
+         mapWrapper.on('ready', function () {
+            // your code
+         });
+    })
 
 ## API说明
 
@@ -53,6 +70,14 @@ AmapUtils是。
 @type {Object} AMap对象
 
 ### AmapUtils.MapWrapper
+
+选择以下任一方式初始化地图：
+
+* 在config.map中设置level，在render的时候传入中心经纬度；
+* 在render的时候传入地址；
+* 在render的时候指定geolocation。
+
+否则默认会通过IP定位。
 
 #### Constructor
 
@@ -104,4 +129,14 @@ AmapUtils是。
 
 #### Events
 
+##### complete
+
+地图加载完成
+
 ##### ready
+
+初始化完成
+
+##### plugin:ready
+
+插件加载完成

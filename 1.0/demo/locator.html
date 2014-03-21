@@ -1,0 +1,130 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>我的位置</title>
+    <script src="http://g.tbcdn.cn/kissy/k/1.4.1/seed-min.js" charset="utf-8"></script>
+    <link rel="stylesheet" href="http://g.tbcdn.cn/kissy/k/1.4.1/css/dpl/base-min.css">
+    <style>
+        #map-container {
+            width: 800px;
+            height: 600px;
+        }
+
+        .map-container-loading {
+            background: url(http://img01.taobaocdn.com/tps/i1/T1cKm3XkRpXXXXXXXX-48-48.gif) center center no-repeat transparent;
+        }
+    </style>
+</head>
+<body>
+<h1>我的位置</h1>
+
+
+<div id="map-container" class="map-container-loading"></div>
+<script>
+    var S = KISSY;
+    if (S.Config.debug) {
+        var srcPath = "../../";
+        S.config({
+            packages: [
+                {
+                    name: "gallery/amapUtils",
+                    path: srcPath,
+                    charset: "utf-8",
+                    ignorePackageNameInUri: true
+                }
+            ]
+        });
+    }
+
+    S.use('node, overlay, gallery/amapUtils/1.0/mapWrapper', function (S, Node, MapWrapper) {
+        var centerData = {
+            lat: 30.278786,
+            lng: 120.026686,
+            level: 16
+        };
+
+        S.ready(function (S) {
+            var mapWrapper = new MapWrapper('#map-container', {
+                key: "b1081aad26845f8c4ed7136809e8e16a",
+                plugins: {
+                    'ToolBar': true,
+                    'OverView': true,
+                    'Scale': true,
+                    'MapType': true
+                }
+            });
+
+            mapWrapper.on('map:ready', function () {
+                mapWrapper.get('containerNode').removeClass('map-container-loading');
+
+                mapWrapper.addListener(mapWrapper.get('map'), 'zoomchange', function (ev) {
+                    Node.one('#level').val(mapWrapper.get('map').getZoom());
+                    Node.one('#center-lat').val(mapWrapper.get('map').getCenter().lat);
+                    Node.one('#center-lng').val(mapWrapper.get('map').getCenter().lng);
+                });
+                mapWrapper.addListener(mapWrapper.get('map'), 'moveend', function (ev) {
+                    Node.one('#center-lat').val(mapWrapper.get('map').getCenter().lat);
+                    Node.one('#center-lng').val(mapWrapper.get('map').getCenter().lng);
+                });
+            });
+
+            mapWrapper.on('afterConfigChange', function (ev) {
+                currentConfig = ev.newVal;
+            });
+
+            mapWrapper.render(centerData);
+
+            var configOverlay = new Overlay.Dialog({
+                width: 900,
+                headerContent: '设置',
+                bodyContent: Node.one('#config-tpl').html(),
+                closable: true,
+                align: {
+                    points: ['cc', 'cc']
+                }
+            });
+
+            configOverlay.show();
+            configOverlay.hide();
+            defaultConfig = currentConfig = getConfig();
+
+            Node.one('#config-btn').on('click', function (ev) {
+                if (!configOverlay._isInitialized) {
+                    configOverlay._isInitialized = true;
+
+                    Node.one('#config-update').on('click', function (ev) {
+                        var formDOMNode = Node.one('#config-form').getDOMNode();
+
+                        mapWrapper.get('containerNode')
+                                .width(formDOMNode['container-width'].value * 1)
+                                .height(formDOMNode['container-height'].value * 1)
+                                .addClass('map-container-loading');
+                        mapWrapper.set('config', getConfig());
+                        mapWrapper.render(centerData);
+                        configOverlay.hide();
+                    });
+
+                    Node.all('#config-form .use-checkbox').on('click', function (ev) {
+                        var checked = this.checked;
+                        var modBdNode = Node.one(this).parent('.mod-hd').next('.mod-bd');
+
+                        if (!checked) {
+                            modBdNode.css('visibility', 'hidden');
+                        } else {
+                            modBdNode.css('visibility', 'visible');
+                        }
+                    });
+                }
+            });
+
+            Node.one('#generate-btn').on('click', function () {
+
+            });
+
+        });
+
+    })
+</script>
+</body>
+</html>

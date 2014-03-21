@@ -1,0 +1,57 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>初始化</title>
+    <script src="http://g.tbcdn.cn/kissy/k/1.4.2/seed-min.js" charset="utf-8"></script>
+    <link rel="stylesheet" href="http://g.tbcdn.cn/kissy/k/1.4.2/css/dpl/base-min.css">
+    <link rel="stylesheet" href="http://docs.kissyui.com/1.4/source/raw/demo/overlay/assets/cool.css">
+    <style>
+        #map-container {
+            width: 800px;
+            height: 600px;
+        }
+    </style>
+</head>
+<body>
+<div id="map-container"></div>
+<script>
+    var S = KISSY;
+
+    S.ready(function (S) {
+        window.init = function () {
+            var centerData = {
+                lat: 30.278786,
+                lng: 120.026686,
+                level: 16
+            };
+
+            var map = new AMap.Map('map-container', {
+                center: new AMap.LngLat(centerData.lng, centerData.lat),
+                level: 15
+            });
+
+            AMap.event.addListener(map, 'complete', function () {
+                console.log('the map is ready.');
+
+                // start your journey here.
+            });
+
+            AMap.event.addListener(map, 'mapmove', function () {
+                console.dir(map.getCenter());
+            });
+
+            map.plugin(['AMap.ToolBar'], function () {
+                map.addControl(new AMap.ToolBar({
+                   locate: false
+                }));
+            });
+        };
+
+        S.getScript('http://webapi.amap.com/maps?v=1.2&key=b1081aad26845f8c4ed7136809e8e16a&&callback=init');
+    });
+
+
+</script>
+</body>
+</html>

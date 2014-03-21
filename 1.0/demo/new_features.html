@@ -1,0 +1,118 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>新特性</title>
+    <script src="http://g.tbcdn.cn/kissy/k/1.4.2/seed-min.js" charset="utf-8"></script>
+    <link rel="stylesheet" href="http://g.tbcdn.cn/kissy/k/1.4.2/css/dpl/base-min.css">
+    <link rel="stylesheet" href="http://docs.kissyui.com/1.4/source/raw/demo/overlay/assets/cool.css">
+    <style>
+        #map-container {
+            width: 800px;
+            height: 600px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+<div id="map-container"></div>
+<p>
+    <button id="ground-image-btn">添加GroundImage</button>
+    <button id="geolocation-btn">通过geolocation定位</button>
+</p>
+<script>
+    var S = KISSY;
+    var centerData = {
+        lat: 30.278786,
+        lng: 120.026686,
+        level: 15
+    };
+
+    if (S.Config.debug) {
+        var srcPath = "./";
+        S.config({
+            packages: [
+                {
+                    name: "gallery/amapUtils",
+                    path: srcPath,
+                    charset: "utf-8",
+                    ignorePackageNameInUri: true
+                }
+            ]
+        });
+    }
+
+    S.use('node, gallery/amapUtils/1.0/mapWrapper', function (S, Node, MapWrapper) {
+        var mapWrapper = new MapWrapper('#map-container', {
+            key: 'b1081aad26845f8c4ed7136809e8e16a',
+            map: {
+                level: centerData.level
+            },
+            plugins: {
+                'ToolBar': {
+                    locate: false
+                }
+            }
+        });
+
+        mapWrapper.on('complete', function () {
+            console.log('the map is ready.')
+        });
+
+        mapWrapper.on('ready', function () {
+            var AMap = this.get('namespace');
+            var map = this.get('map');
+            var marker = new AMap.Marker({
+                map: map,
+                position: map.getCenter(),
+                animation: 'AMAP_ANIMATION_DROP'
+            });
+            var infoWindow = new AMap.InfoWindow({
+                content: '阿里巴巴西溪园区',
+                offset: new AMap.Pixel(0, -40)
+            });
+
+            infoWindow.open(map, map.getCenter());
+
+            Node.one('#ground-image-btn').on('click', function (ev) {
+                new AMap.GroundImage('http://news.xinhuanet.com/house/nj/2013-11-11/118089323_71n.png', map.getBounds(), {
+                    map: map
+                });
+
+                marker.hide();
+                infoWindow.close();
+
+                map.setZoom(map.getZoom() - 1);
+            });
+
+            Node.one('#geolocation-btn').on('click', function (ev) {
+                map.plugin(['AMap.Geolocation'], function () {
+                    var geolocation = new AMap.Geolocation();
+
+                    if (geolocation.isSupported()) {
+                        marker.hide();
+                        infoWindow.close();
+
+                        AMap.event.addListener(geolocation, 'complete', function (result) {
+                            map.setCenter(result.position);
+                            marker.setPosition(result.position);
+                            marker.show();
+                            infoWindow.open(map, result.position);
+                            infoWindow.setContent('我在这里。')
+                        });
+
+                        AMap.event.addListener(geolocation, 'error', function (error) {
+                            alert(error.info);
+                        });
+
+                        geolocation.getCurrentPosition();
+                    }
+                });
+            });
+        });
+
+        mapWrapper.render(centerData);
+    });
+</script>
+</body>
+</html>

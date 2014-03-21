@@ -2,32 +2,32 @@
 <html>
 <head>
     <meta charset="utf-8"/>
-    <title>AmapUtils的demo</title>
-    <script src="http://g.tbcdn.cn/kissy/k/1.4.1/seed-min.js" charset="utf-8"></script>
+    <title>AmapUtils的demos</title>
+    <script src="http://g.tbcdn.cn/kissy/k/1.4.2/seed-min.js" charset="utf-8"></script>
     <link rel="stylesheet" href="http://g.tbcdn.cn/kissy/k/1.3.0/css/dpl/base-min.css">
 </head>
 <body>
 <h2>AmapUtils的demo</h2>
 
-<script>
-    var S = KISSY;
-    if (S.Config.debug) {
-        var srcPath = "../../";
-        S.config({
-            packages:[
-                {
-                    name:"gallery/amapUtils",
-                    path:srcPath,
-                    charset:"utf-8",
-                    ignorePackageNameInUri:true
-                }
-            ]
-        });
-    }
-
-    S.use('gallery/amapUtils/1.0/index', function (S, AmapUtils) {
-          new AmapUtils();
-    })
-</script>
+<ul>
+    <li>
+        <a href="./config_raw.html" target="_blank">原生的地图初始化</a>
+    </li>
+    <li>
+        <a href="./known_center_raw.html" target="_blank">原生的地图初始化，定位至给定中心</a>
+    </li>
+    <li>
+        <a href="./known_center.html" target="_blank">地图初始化，定位至给定中心</a>
+    </li>
+    <li>
+        <a href="./new_features.html" target="_blank">新特性</a>
+    </li>
+    <li>
+        <a href="./scrollwheel.html" target="_blank">解决当scrollwheel滚动页面时会触发地图缩放的问题</a>
+    </li>
+    <li>
+        <a href="./zooms.html" target="_blank">当前缩放级别</a>
+    </li>
+</ul>
 </body>
 </html>

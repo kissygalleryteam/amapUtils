@@ -195,7 +195,8 @@ KISSY.add('gallery/amapUtils/1.0/mapWrapper',function (S, Node, Base, Loader) {
 
                     this.set('map', map);
 
-                    this.addListener('complete', function (ev) {
+                    this.addListener('complete', function () {
+                        that.fire('complete');
 
                         if (centerData && S.isNumber(centerData.lng) && S.isNumber(centerData.lat)) {
                             that.fire('ready');
@@ -208,11 +209,8 @@ KISSY.add('gallery/amapUtils/1.0/mapWrapper',function (S, Node, Base, Loader) {
                             // 使用HTML Geolocation API定位
                             that._locateByGeolocation(centerData.geolocation);
                         } else {
+                            that._locateByIP();
                         }
-
-                        that.fire('map:load', {
-                            eventData: ev
-                        });
                     });
 
 

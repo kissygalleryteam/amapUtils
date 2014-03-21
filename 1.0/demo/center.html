@@ -1,0 +1,96 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>地图中心的经纬度</title>
+    <script src="http://g.tbcdn.cn/kissy/k/1.4.2/seed-min.js" charset="utf-8"></script>
+    <link rel="stylesheet" href="http://g.tbcdn.cn/kissy/k/1.4.2/css/dpl/base-min.css">
+    <link rel="stylesheet" href="http://docs.kissyui.com/1.4/source/raw/demo/overlay/assets/cool.css">
+    <style>
+        #map-container {
+            width: 800px;
+            height: 600px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+<div id="map-container"></div>
+<script>
+    var S = KISSY;
+    var centerData = {
+        lat: 30.278786,
+        lng: 120.026686,
+        level: 15
+    };
+
+    if (S.Config.debug) {
+        var srcPath = "./";
+        S.config({
+            packages: [
+                {
+                    name: "gallery/amapUtils",
+                    path: srcPath,
+                    charset: "utf-8",
+                    ignorePackageNameInUri: true
+                }
+            ]
+        });
+    }
+
+    S.use('node, gallery/amapUtils/1.0/mapWrapper', function (S, Node, MapWrapper) {
+        var mapWrapper = new MapWrapper('#map-container', {
+            key: 'b1081aad26845f8c4ed7136809e8e16a',
+            map: {
+                level: centerData.level,
+                zooms: [1, 30]
+            },
+            plugins: {
+                'ToolBar': {
+                    locate: false
+                }
+            }
+        });
+
+        mapWrapper.on('complete', function () {
+            console.log('the map is ready.')
+        });
+
+        mapWrapper.on('ready', function () {
+            var AMap = this.get('namespace');
+            var map = this.get('map');
+            var marker = new AMap.Marker({
+                map: map,
+                position: map.getCenter()
+            });
+            var infoWindow = new AMap.InfoWindow({
+                content: S.substitute('({lng},{lat})', {
+                    lat: map.getCenter().lat,
+                    lng: map.getCenter().lng
+                }),
+                offset: new AMap.Pixel(0, -40)
+            });
+
+            infoWindow.open(map, map.getCenter());
+
+            this.addListener('dragstart', function () {
+                marker.hide();
+                infoWindow.close();
+            });
+
+            this.addListener('dragend', function () {
+                marker.setPosition(map.getCenter());
+                marker.show();
+                infoWindow.setContent(S.substitute('({lng},{lat})', {
+                    lat: map.getCenter().lat,
+                    lng: map.getCenter().lng
+                }));
+                infoWindow.open(map, map.getCenter());
+            });
+        });
+
+        mapWrapper.render(centerData);
+    });
+</script>
+</body>
+</html>
