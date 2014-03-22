@@ -262,12 +262,14 @@ KISSY.add(function (S, Node, Base, Loader) {
                     });
                 },
                 _locateByIP: function () {
-                    map.plugin(['AMap.CitySearch'], function () {
+                    var that = this;
+
+                    this.plugin(['AMap.CitySearch'], function () {
                         var citySearch = new AMap.CitySearch();
 
                         AMap.event.addListener(citySearch, 'complete', function (citySearchResult) {
                             if (citySearchResult.info != 'NO_DATA') {
-                                map.setBounds(citySearchResult.bounds);
+                                that.get('map').setBounds(citySearchResult.bounds);
                             }
                             that.fire('ready')
                         });
